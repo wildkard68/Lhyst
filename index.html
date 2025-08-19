@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6366F1" />
+    <meta property="og:image" content="./assets/icon-512.upperleft.v1.png" />
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+
+      <link rel="icon" sizes="16x16" href="./assets/favicon-16.upperleft.v1.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.upperleft.v1.png" />
+    <link rel="icon" href="./favicon.upperleft.v1.ico" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <title>Lhyst</title>
+  <style>
+    :root{
+      color-scheme: light;
+      --bg: #f8fafc;
+      --bg-accent: radial-gradient(900px 400px at 15% -10%, rgba(99,102,241,.12), transparent 60%), radial-gradient(700px 400px at 85% 0%, rgba(34,197,94,.10), transparent 55%);
+      --surface: #ffffff;
+      --muted: #f3f4f6;
+      --line: #e5e7eb;
+      --text: #0f172a;
+      --subtle: #475569;
+      --brand: #6366F1; /* indigo-500 */
+      --brand-ink: #4338CA; /* indigo-700 */
+      --accent: #22C55E; /* emerald-500 */
+      --warn: #EAB308;
+      --danger: #EF4444;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 12px 30px rgba(2,6,23,.08);
+      --ring: 0 0 0 4px rgba(99,102,241,.18);
+      --ring-green: 0 0 0 4px rgba(34,197,94,.18);
+      --surface-soft: #fbfdff;
+      --table-head: #f1f5ff;
+      --table-head-line: #e0e7ff;
+      --tab-bg: #eef2ff;
+      --tab-ink: #312e81;
+      --popover: #ffffff;
+    }
+    html[data-theme="dark"]{
+      color-scheme: dark;
+      --bg: #0b1220;
+      --bg-accent: radial-gradient(900px 400px at 15% -10%, rgba(99,102,241,.20), transparent 60%), radial-gradient(700px 400px at 85% 0%, rgba(34,197,94,.14), transparent 55%);
+      --surface: #0f172a;
+      --muted: #0b162b;
+      --line: #1f2937;
+      --text: #e5e7eb;
+      --subtle: #9ca3af;
+      --brand: #8b8cf6;
+      --brand-ink: #6366f1;
+      --accent: #34d399;
+      --warn: #f59e0b;
+      --danger: #f87171;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --ring: 0 0 0 4px rgba(139,140,246,.22);
+      --ring-green: 0 0 0 4px rgba(52,211,153,.20);
+      --surface-soft: #0b1220;
+      --table-head: #121a2b;
+      --table-head-line: #1c2540;
+      --tab-bg: #1a2340;
+      --tab-ink: #c7d2fe;
+      --popover: #0f172a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: var(--bg-accent), var(--bg);
+    }
+    header{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: saturate(1.4) blur(10px);
+      background: color-mix(in srgb, var(--surface) 70%, transparent);
+      border-bottom: 1px solid var(--line);
+      color:var(--text);
+      padding: 10px 16px;
+      display:flex; align-items:center; gap:12px;
+    }
+    header h1{font-size:18px;margin:0;font-weight:800;letter-spacing:.2px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-badge{
+      width:28px;height:28px;border-radius:10px;
+      background: linear-gradient(180deg, var(--brand), var(--brand-ink));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.25), 0 4px 10px rgba(17,24,39,.15);
+    }
+    .spacer{flex:1}
+    nav#tabs{
+      display:flex;gap:8px;flex-wrap:nowrap; padding:4px; border-radius:999px; background:var(--tab-bg); border:1px solid var(--table-head-line);
+      overflow:hidden;
+    }
+    nav#tabs .inner{ display:flex; gap:8px; overflow:auto; scrollbar-width:none }
+    nav#tabs .inner::-webkit-scrollbar{ display:none }
+    .tab{
+      background:transparent; color:var(--tab-ink); border:0;
+      padding:8px 12px; border-radius:999px; font-weight:700; cursor:pointer; white-space:nowrap;
+    }
+    .tab.active{background:var(--surface); color:var(--text); box-shadow: var(--shadow)}
+    .tab:hover{opacity:.95}
+
+    /* Menu button + popover for compact */
+    #menuWrap{ display:none; position:relative }
+    #menuBtn{
+      background: linear-gradient(180deg,var(--surface), var(--muted));
+      color: var(--text);
+      border:1px solid var(--line); border-radius:12px; padding:8px 10px; cursor:pointer; font-weight:700;
+      box-shadow: var(--shadow); display:flex; align-items:center; gap:8px;
+    }
+    #menuBtn:focus{ outline:none; box-shadow: var(--ring) }
+    #menuPopover{
+      position:absolute; top:calc(100% + 8px); right:0; min-width:220px;
+      background: var(--popover); border:1px solid var(--line); border-radius:16px; box-shadow: var(--shadow);
+      padding:6px; display:none; z-index:50;
+    }
+    #menuPopover.open{ display:block }
+    .menu-item{
+      width:100%; text-align:left; background:transparent; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; color:var(--text);
+      display:flex; align-items:center; gap:8px; font-weight:700;
+    }
+    .menu-item:hover, .menu-item[aria-current="true"]{ background:var(--tab-bg); border:1px solid var(--table-head-line) }
+    .menu-divider{ height:1px; background:var(--line); margin:4px 0 }
+
+    /* Theme button */
+    #themeBtn{
+      background: linear-gradient(180deg,var(--surface), var(--muted));
+      color: var(--text);
+      border:1px solid var(--line); border-radius:999px; padding:8px 10px; cursor:pointer; font-weight:700;
+      box-shadow: var(--shadow);
+    }
+    #themeBtn:focus{ outline:none; box-shadow: var(--ring) }
+
+    main{padding:22px; max-width:1200px; margin: 0 auto}
+    .toolbar{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;
+      background: var(--surface); border:1px solid var(--line); border-radius: var(--radius); padding: 10px;
+      box-shadow: var(--shadow);
+    }
+    .btn{
+      background: linear-gradient(180deg,var(--surface), var(--muted));
+      color:var(--text); border:1px solid var(--line);
+      padding:10px 12px; border-radius:12px; font-weight:700; cursor:pointer;
+      box-shadow: var(--shadow);
+    }
+    .btn.primary{
+      background: linear-gradient(180deg,var(--brand), var(--brand-ink));
+      color:#fff; border:1px solid color-mix(in srgb, var(--brand-ink) 90%, black);
+    }
+    .btn.ghost{ background:var(--surface); color:var(--text); border:1px dashed var(--line) }
+    .btn.small{ padding:8px 10px; border-radius:10px; font-weight:600 }
+    .btn:focus{ outline:none; box-shadow: var(--ring) }
+    .btn:active{ transform: translateY(1px) }
+
+    section{display:none}
+    section.active{display:block; animation:fade .18s ease-out}
+    @keyframes fade{from{opacity:.5; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+    .card{
+      background: var(--surface);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .grid{ display:grid; gap:12px }
+    .grid.cols-3{ grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); }
+    .row{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:10px }
+
+    form{ background: var(--surface); border:1px solid var(--line); border-radius: var(--radius); padding: 12px; display:grid; gap:12px }
+    label{ font-size:12px; color: var(--subtle); font-weight:700; letter-spacing:.25px }
+    input, select, textarea{
+      width:100%; padding:12px 12px; border-radius:12px;
+      background:var(--surface-soft); color:var(--text);
+      border: 1px solid var(--line); outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    input:hover, select:hover, textarea:hover{ background:var(--surface) }
+    input:focus, select:focus, textarea:focus{
+      border-color: var(--brand); box-shadow: var(--ring); background:var(--surface);
+    }
+
+    table{ width:100%; border-collapse: separate; border-spacing:0; margin-top:10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow: var(--shadow) }
+    th, td{ padding:12px; border-bottom:1px solid #26304233; text-align:left; font-size:14px }
+    thead th{ background:var(--table-head); border-bottom:1px solid var(--table-head-line); position:sticky; top:0; z-index:1 }
+    tbody tr:hover{ background: color-mix(in srgb, var(--surface) 92%, var(--brand) 8%) }
+    .pill{ background:var(--tab-bg); border:1px solid var(--table-head-line); padding:4px 8px; border-radius:999px; font-size:12px; color:var(--tab-ink) }
+
+    .note{ color: var(--subtle); font-size:12px }
+
+    .flex{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+    .right{ margin-left:auto }
+
+    .kpi .value{ font-size:30px; font-weight:800 }
+    .kpi .label{ color: var(--subtle); font-size:12px }
+
+    .equip-panel{ border:1px solid var(--line); border-radius: var(--radius); overflow:hidden; background: var(--surface); box-shadow: var(--shadow); }
+    .equip-header{ padding:16px; background: var(--muted); border-bottom:1px solid var(--line); display:grid; gap:10px; }
+    .equip-body{ padding:16px; display:grid; gap:12px }
+    .inline-controls{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:10px }
+    .schedule-builder{ margin-top:4px; padding:12px; background:var(--surface-soft); border:1px solid var(--line); border-radius: var(--radius-sm); }
+    .days{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px }
+    .chip{ display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px; background:var(--muted); border:1px solid var(--line); cursor:pointer; user-select:none; color:var(--text) }
+    .chip input{ margin:0 }
+
+    .hidden{ display:none }
+    .month-grid{ display:grid; grid-template-columns: repeat(7, minmax(38px, 1fr)); gap:8px; margin-top:8px }
+    .day-cell{ display:flex; align-items:center; justify-content:center; height:38px; border:1px solid var(--line); border-radius:12px; background:var(--surface); cursor:pointer; user-select:none; font-weight:700; color:var(--text); transition: box-shadow .12s ease, border-color .12s ease, background .12s ease; }
+    .day-cell:hover{ border-color: color-mix(in srgb, var(--brand) 45%, var(--line) 55%); background:var(--surface-soft) }
+    .day-cell.selected{ border-color:var(--brand); box-shadow: var(--ring); background:var(--tab-bg) }
+    .calendar-note{ font-size:12px; color:var(--subtle); margin-top:6px }
+    .calendar-warning{ font-size:12px; color:#b45309; background:#fef3c7; border:1px solid #fde68a; padding:8px; border-radius:12px; margin-top:8px }
+
+    .combo{ position:relative }
+    .combo input{ width:100% }
+    .combo-list{
+      position:absolute; left:0; right:0; top:calc(100% + 6px);
+      background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow: var(--shadow);
+      max-height:240px; overflow:auto; padding:6px;
+      z-index:50;
+    }
+    .combo-item{
+      padding:10px 12px; border-radius:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; color:var(--text);
+    }
+    .combo-item:hover, .combo-item.active{ background:var(--tab-bg); border:1px solid var(--table-head-line) }
+    .combo-empty{ padding:10px 12px; color:var(--subtle); font-size:12px }
+    .combo-hint{ color:var(--subtle); font-size:12px }
+
+    body.nav-compact nav#tabs{ display:none }
+    body.nav-compact #menuWrap{ display:block }
+    @media (max-width: 720px){
+      nav#tabs{ display:none }
+      #menuWrap{ display:block }
+    }
+  
+    .brand-logo{ height:44px; width:auto; display:block; object-fit:contain; vertical-align:middle }
+  
+    /* Toast notifications (non-destructive add) */
+    #toast{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:420px}
+    .toast-item{border:1px solid var(--line);background:var(--surface);color:var(--text);box-shadow:var(--shadow);border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+    .toast-item.success{border-color:color-mix(in srgb,var(--accent) 40%, var(--line) 60%)}
+    .toast-item.error{border-color:color-mix(in srgb,#ef4444 50%, var(--line) 50%)}
+    .toast-item.warn{border-color:color-mix(in srgb,#f59e0b 50%, var(--line) 50%)}
+    .toast-icon{font-size:18px;line-height:1}
+    .toast-title{font-weight:800}
+    .toast-desc{font-size:13px;color:var(--subtle)}
+    .toast-close{background:transparent;border:0;color:var(--subtle);font-weight:800;cursor:pointer}
+
+  
+    /* Table placeholders */
+    tr.placeholder td{color:var(--subtle);}
+    tr.placeholder td .ph{
+      display:block; width:100%; height:14px; border:1px dashed var(--line);
+      border-radius:8px; background:color-mix(in srgb, var(--surface) 70%, var(--muted) 30%);
+    }
+
+  
+    /* Placeholder visual polish for a flush, modern look */
+    tr.placeholder td{ padding-top:10px; padding-bottom:10px; }
+    tr.placeholder td .ph{ height:12px; border-radius:10px; opacity:0.75 }
+
+  
+    /* Feedback UI (modal + buttons) */
+    .btn{border:1px solid var(--line); background:var(--surface); color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer}
+    .btn.primary{border-color:var(--accent);}
+    .btn.subtle{opacity:0.8}
+    .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:10000}
+    .modal.hidden{display:none}
+    .modal-card{background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); width:min(720px, 92vw);}
+    .modal-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line)}
+    .modal-card form{padding:14px 16px}
+    .modal-card .grid.two{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .modal-card label{display:block; font-weight:700; font-size:12px; margin-bottom:6px; color:var(--subtle)}
+    .modal-card input,.modal-card select,.modal-card textarea{width:100%; border:1px solid var(--line); background:var(--surface); color:var(--text); border-radius:10px; padding:10px 12px}
+    .modal-card .chk{display:flex; align-items:center; gap:8px; font-weight:600}
+    .modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px}
+    .modal-close{border:0; background:transparent; cursor:pointer; font-size:18px; color:var(--subtle)}
+    .feedback-fab{position:fixed; bottom:18px; right:18px; z-index:9999; border-radius:999px; padding:10px 14px}
+    .nav-feedback{margin-left:10px}
+    @media (max-width:740px){ .modal-card .grid.two{grid-template-columns:1fr} }
+
+  
+    /* Feedback FAB & Modal (always visible) */
+    .feedback-fab{position:fixed; bottom:18px; right:18px; z-index:10050; border-radius:999px; padding:12px 16px; box-shadow:var(--shadow)}
+    .btn{border:1px solid var(--line); background:var(--surface); color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer}
+    .btn.primary{border-color:var(--accent);}
+    .modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:10040}
+    .modal.hidden{display:none}
+    .modal-card{background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); width:min(720px, 92vw);}
+    .modal-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line)}
+    .modal-card form{padding:14px 16px}
+    .modal-card .grid.two{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .modal-card label{display:block; font-weight:700; font-size:12px; margin-bottom:6px; color:var(--subtle)}
+    .modal-card input,.modal-card select,.modal-card textarea{width:100%; border:1px solid var(--line); background:var(--surface); color:var(--text); border-radius:10px; padding:10px 12px}
+    .modal-card .chk{display:flex; align-items:center; gap:8px; font-weight:600}
+    .modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:10px}
+    .modal-close{border:0; background:transparent; cursor:pointer; font-size:18px; color:var(--subtle)}
+    @media (max-width:740px){ .modal-card .grid.two{grid-template-columns:1fr} }
+
+  </style>
+
+  <script>
+  (function(){
+    try {
+      if (location.protocol === 'file:' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations && navigator.serviceWorker.getRegistrations().then(function(regs){
+          regs.forEach(function(r){ r.unregister(); });
+        });
+      }
+    } catch(e) { /* ignore */ }
+  })();
+  </script>
+
+
+</head>
+<body>
+
+  <script>
+  (function(){
+    function unhide(){
+      ['tabs','tabsInner','menuWrap','recentTable','tempsTable','cleanTable','auditTable'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el){
+          try{ el.classList.remove('hidden'); }catch(e){}
+          el.style.opacity='1'; el.style.visibility='visible';
+        }
+      });
+      document.body.style.opacity='1';
+    }
+    // Show errors without breaking the page
+    window.addEventListener('error', function(evt){
+      try{
+        var msg = (evt && evt.message) ? evt.message : 'Unknown error';
+        var t = document.getElementById('toast');
+        if(t){
+          var d=document.createElement('div');
+          d.className='toast-item error';
+          d.innerHTML='<div class="toast-icon">⚠️</div><div><div class="toast-title">Script error</div><div class="toast-desc">'+String(msg)+'</div></div>';
+          t.appendChild(d);
+          setTimeout(function(){ d.remove(); }, 6500);
+        }
+      }catch(e){}
+      // Don’t block rendering
+      unhide();
+    }, true);
+    window.addEventListener('unhandledrejection', function(evt){
+      try{
+        var msg = (evt && evt.reason && (evt.reason.message||evt.reason)) || 'Promise rejection';
+        var t = document.getElementById('toast');
+        if(t){
+          var d=document.createElement('div');
+          d.className='toast-item warn';
+          d.innerHTML='<div class="toast-icon">ℹ️</div><div><div class="toast-title">Background error</div><div class="toast-desc">'+String(msg)+'</div></div>';
+          t.appendChild(d);
+          setTimeout(function(){ d.remove(); }, 5000);
+        }
+      }catch(e){}
+    });
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(unhide, 200);
+    });
+  })();
+  </script>
+
+  <div id="toast" aria-live="polite" aria-atomic="true"></div>
+  <header>
+    <div class="brand">
+      <img src="./assets/brand-logo.upperleft.v2.png" alt="Lhyst logo" class="brand-logo" />
+      <h1>Lhyst</h1>
+    </div>
+    <div class="spacer"></div>
+    <nav id="tabs" aria-label="Primary">
+      <div class="inner" id="tabsInner"></div>
+    </nav>
+    <div id="menuWrap">
+      <button id="menuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="menuPopover">☰ Menu</button>
+      <div id="menuPopover" role="menu" aria-labelledby="menuBtn"></div>
+    </div>
+    <button id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <input type="date" id="filterFrom" />
+      <input type="date" id="filterTo" />
+      <select id="filterType">
+        <option value="">All categories</option>
+        <option value="temperatures">Temperatures</option>
+        <option value="cleaning">Cleaning</option>
+        <option value="audits">Audits</option>
+      </select>
+      <button class="btn primary" id="applyFilter">Filter</button>
+      <button class="btn" id="notifyBtn">Enable Notifications</button>
+      <button class="btn ghost" id="clearFilter">Clear</button>
+      <span class="right"></span>
+      <button class="btn" id="backupBtn">Export Backup (JSON)</button>
+      <input type="file" id="restoreFile" class="hidden" accept=".json" />
+      <button class="btn ghost" id="restoreBtn">Import Backup</button>
+    </div>
+
+    <section id="view-dashboard" class="active">
+      <div class="grid cols-3">
+        <div class="card kpi"><div class="value" id="kpiTemps">0</div><div class="label">Temps logged (7 days)</div></div>
+        <div class="card kpi"><div class="value" id="kpiClean">0</div><div class="label">Cleaning tasks (7 days)</div></div>
+        <div class="card kpi"><div class="value" id="kpiAudits">0</div><div class="label">Audits (90 days)</div></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin:6px 0 10px 0">Recent Activity</h3>
+        <table id="recentTable"><thead><tr>
+          <th>When</th><th>Type</th><th>Details</th><th>Staff</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section id="view-temps">
+      <form id="tempForm">
+        <div class="row">
+          <div><label>Food / Location</label><input id="tempItem" required placeholder="e.g., Chicken - Hot Holding"></div>
+          <div><label>Temperature (°F)</label><input id="tempValue" type="number" step="0.1" required></div>
+          <div><label>Probe / Sensor</label><input id="tempSensor" placeholder="Manual, ThermoPro, etc."></div>
+          <div class="combo">
+            <label>Staff</label>
+            <input id="tempStaff" placeholder="Click or type to search staff" autocomplete="off"/>
+            <div class="combo-list hidden" id="tempStaffList"></div>
+          </div>
+          <div><label>Time</label><input id="tempTime" type="datetime-local"></div>
+        </div>
+        <div class="row">
+          <div><label>Notes</label><input id="tempNotes" placeholder="Optional notes"></div>
+          <div><label>Photo</label><input id="tempPhoto" type="file" accept="image/*" capture="environment"></div>
+        </div>
+        <div class="flex">
+          <button class="btn primary" type="submit">Save Temperature</button>
+          <button class="btn" type="button" id="bleBtn">Connect BLE Thermometer (optional)</button>
+          <span class="right"></span>
+          <button class="btn ghost" type="button" id="exportTempsCsv">Export Temps CSV</button>
+        </div>
+      </form>
+      <table id="tempsTable"><thead><tr>
+        <th>Time</th><th>Item</th><th>°F</th><th>Sensor</th><th>Staff</th><th>Notes</th><th>Photo</th>
+      </tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="view-cleaning">
+      <form id="cleanForm">
+        <div class="row">
+          <div><label>Task</label><input id="cleanTask" required placeholder="e.g., Sanitize cutting boards"></div>
+          <div><label>Equipment</label>
+            <select id="cleanEquipment"><option value="">None</option></select>
+          </div>
+          <div class="combo">
+            <label>Staff</label>
+            <input id="cleanStaff" placeholder="Click or type to search staff" autocomplete="off"/>
+            <div class="combo-list hidden" id="cleanStaffList"></div>
+          </div>
+          <div><label>Time</label><input id="cleanTime" type="datetime-local"></div>
+        </div>
+        <div class="row">
+          <div><label>Notes</label><input id="cleanNotes" placeholder="Optional notes"></div>
+          <div><label>Photo</label><input id="cleanPhoto" type="file" accept="image/*" capture="environment"></div>
+        </div>
+        <div class="flex">
+          <button class="btn primary" type="submit">Save Cleaning</button>
+          <span class="right"></span>
+          <button class="btn ghost" type="button" id="exportCleaningCsv">Export Cleaning CSV</button>
+        </div>
+      </form>
+      <table id="cleanTable"><thead><tr>
+        <th>Time</th><th>Task</th><th>Equipment</th><th>Staff</th><th>Notes</th><th>Photo</th>
+      </tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="view-audits">
+      <form id="auditForm">
+        <div class="row">
+          <div><label>Audit Type</label><input id="auditType" required placeholder="e.g., Health Inspection"></div>
+          <div><label>Result</label><input id="auditResult" placeholder="Pass, Needs follow-up, etc."></div>
+          <div class="combo">
+            <label>Staff</label>
+            <input id="auditStaff" placeholder="Click or type to search staff" autocomplete="off"/>
+            <div class="combo-list hidden" id="auditStaffList"></div>
+          </div>
+          <div><label>Time</label><input id="auditTime" type="datetime-local"></div>
+        </div>
+        <div class="row">
+          <div><label>Notes</label><textarea id="auditNotes" rows="3" placeholder="Findings, corrective actions, etc."></textarea></div>
+          <div><label>Attachment</label><input id="auditPhoto" type="file" accept="image/*,.pdf"></div>
+        </div>
+        <div class="flex">
+          <button class="btn primary" type="submit">Save Audit</button>
+          <span class="right"></span>
+          <button class="btn ghost" type="button" id="exportAuditsCsv">Export Audits CSV</button>
+        </div>
+      </form>
+      <table id="auditTable"><thead><tr>
+        <th>Time</th><th>Type</th><th>Result</th><th>Staff</th><th>Notes</th><th>Attachment</th>
+      </tr></thead><tbody></tbody></table>
+    </section>
+
+    <section id="view-equipment">
+      <div class="equip-panel">
+        <div class="equip-header">
+          <div class="inline-controls">
+            <div><label>Name</label><input id="equipName" required placeholder="e.g., Grill #1"></div>
+            <div><label>Enable Reminders</label>
+              <select id="equipRemindersEnabled">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="equip-body">
+          <div class="equip-section">
+            <label style="font-weight:800">Alarm Schedule</label>
+            <div class="schedule-builder">
+              <div class="row">
+                <div>
+                  <label>Schedule Type</label>
+                  <select id="schedType">
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <div id="weeklyPicker">
+                  <label>Days of Week</label>
+                  <div class="days">
+                    <label class="chip"><input type="checkbox" value="0">Sun</label>
+                    <label class="chip"><input type="checkbox" value="1">Mon</label>
+                    <label class="chip"><input type="checkbox" value="2">Tue</label>
+                    <label class="chip"><input type="checkbox" value="3">Wed</label>
+                    <label class="chip"><input type="checkbox" value="4">Thu</label>
+                    <label class="chip"><input type="checkbox" value="5">Fri</label>
+                    <label class="chip"><input type="checkbox" value="6">Sat</label>
+                  </div>
+                </div>
+                <div id="monthlyPicker" class="hidden">
+                  <label>Select Days of Month</label>
+                  <div class="month-grid" id="monthGrid"></div>
+                  <div class="calendar-note">Tip: Select multiple days (e.g., 1, 15, 31).</div>
+                  <div class="calendar-warning hidden" id="monthWarning"></div>
+                  <div style="margin-top:8px">
+                    <label class="chip"><input type="checkbox" id="autoRollToggle"> Use last day of month if a selected day doesn't exist</label>
+                  </div>
+                </div>
+                <div>
+                  <label>Time (24h HH:MM)</label>
+                  <input id="schedTime" placeholder="09:00" />
+                </div>
+              </div>
+              <div class="flex" style="margin-top:6px">
+                <button class="btn small primary" id="addSchedule" type="button">Add to Schedule</button>
+                <span class="note">Add multiple weekly and/or monthly alarms.</span>
+              </div>
+              <div id="scheduleList" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div>
+            </div>
+          </div>
+
+          <div class="flex" style="margin-top:8px">
+            <button class="btn primary" id="addEquipBtn">Add Equipment</button>
+            <span class="note">Reminders prompt Cleaning logs; actual timestamps are captured when you save the Cleaning entry.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin:6px 0 6px 0">Equipment List</h3>
+        <table id="equipTable"><thead><tr>
+          <th>Name</th><th>Schedules</th><th>Enabled</th><th>Actions</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section id="view-staff">
+      <div class="card">
+        <h3 style="margin:6px 0 6px 0">Add Staff</h3>
+        <form id="staffForm">
+          <div class="row">
+            <div><label>Name</label><input id="staffName" required placeholder="e.g., Alex Johnson"></div>
+            <div><label>Role (optional)</label><input id="staffRole" placeholder="e.g., Line Cook"></div>
+          </div>
+          <div class="flex">
+            <button class="btn primary" type="submit">Add Staff</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin:6px 0 6px 0">Staff List</h3>
+        <table id="staffTable"><thead><tr>
+          <th>Name</th><th>Role</th><th>Actions</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  // Tabs
+  const TABS = [
+    {id:'dashboard', label:'Dashboard'},
+    {id:'temps', label:'Temperatures'},
+    {id:'cleaning', label:'Cleaning'},
+    {id:'audits', label:'Audits'},
+    {id:'equipment', label:'Equipment'},
+    {id:'staff', label:'Staff'}
+  ];
+  const tabsInner = document.getElementById('tabsInner');
+  function renderTabs(){
+    tabsInner.innerHTML='';
+    TABS.forEach(t=>{
+      const b=document.createElement('button'); b.className='tab'; b.textContent=t.label; b.dataset.view=t.id;
+      b.onclick=()=>show(t.id);
+      tabsInner.appendChild(b);
+    });
+  }
+  renderTabs();
+
+  function show(id){
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+    document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('view-'+id).classList.add('active');
+    // reflect in menu
+    highlightMenu(id);
+    history.replaceState(null, '', '#view-'+id);
+    closeMenu();
+  }
+
+  // Click menu popover
+  const menuBtn = document.getElementById('menuBtn');
+  const menu = document.getElementById('menuPopover');
+  function renderMenu(){
+    menu.innerHTML = TABS.map((t,i)=>`<button class="menu-item" role="menuitem" data-view="${t.id}" ${i===0?'tabindex="0"':''}>${t.label}</button>`).join('');
+    menu.querySelectorAll('.menu-item').forEach(btn=> btn.addEventListener('click', ()=> show(btn.dataset.view)));
+  }
+  function openMenu(){
+    menu.classList.add('open');
+    menuBtn.setAttribute('aria-expanded','true');
+    // focus first item
+    const first = menu.querySelector('.menu-item'); first && first.focus();
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onMenuKeys);
+  }
+  function closeMenu(){
+    menu.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded','false');
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onMenuKeys);
+  }
+  function toggleMenu(){ menu.classList.contains('open') ? closeMenu() : openMenu(); }
+  function onDocClick(e){
+    if(!menu.contains(e.target) && e.target!==menuBtn){ closeMenu(); }
+  }
+  function onMenuKeys(e){
+    const items = Array.from(menu.querySelectorAll('.menu-item'));
+    const idx = items.indexOf(document.activeElement);
+    if(e.key==='Escape'){ e.preventDefault(); closeMenu(); menuBtn.focus(); return; }
+    if(e.key==='ArrowDown'){ e.preventDefault(); (items[idx+1]||items[0])?.focus(); }
+    if(e.key==='ArrowUp'){ e.preventDefault(); (items[idx-1]||items[items.length-1])?.focus(); }
+    if(e.key==='Home'){ e.preventDefault(); items[0]?.focus(); }
+    if(e.key==='End'){ e.preventDefault(); items[items.length-1]?.focus(); }
+    if(e.key==='Enter' || e.key===' '){
+      if((document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('menu-item'))){
+        e.preventDefault(); document.activeElement.click();
+      }
+    }
+  }
+  function highlightMenu(currentId){
+    menu.querySelectorAll('.menu-item').forEach(btn=> btn.setAttribute('aria-current', btn.dataset.view===currentId ? 'true' : 'false'));
+  }
+  menuBtn.addEventListener('click', toggleMenu);
+  renderMenu();
+
+  // Auto-condense nav based on available width
+  const header = document.querySelector('header');
+  const tabsNav = document.getElementById('tabs');
+  function checkNavFit(){
+    const tooNarrow = header.scrollWidth > header.clientWidth + 2 ||
+                      tabsNav.scrollWidth > tabsNav.clientWidth + 2;
+    document.body.classList.toggle('nav-compact', tooNarrow);
+  }
+  new ResizeObserver(checkNavFit).observe(header);
+  window.addEventListener('resize', checkNavFit);
+  window.addEventListener('load', checkNavFit);
+
+  // Theme toggle
+  const themeBtn = document.getElementById('themeBtn');
+  function applyTheme(theme){
+    if(theme==='auto'){
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }else{
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    themeBtn.textContent = document.documentElement.getAttribute('data-theme')==='dark' ? '☀️' : '🌙';
+  }
+  function getSavedTheme(){ return localStorage.getItem('fs-theme') || 'auto'; }
+  function setSavedTheme(t){ localStorage.setItem('fs-theme', t); }
+  function toggleTheme(){
+    const current = getSavedTheme();
+    const next = current==='light' ? 'dark' : current==='dark' ? 'auto' : 'light'; // cycle
+    setSavedTheme(next); applyTheme(next);
+  }
+  themeBtn.addEventListener('click', toggleTheme);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if(getSavedTheme()==='auto') applyTheme('auto'); });
+  applyTheme(getSavedTheme());
+
+  // Routing via hash (optional)
+  if(location.hash.startsWith('#view-')){
+    const id = location.hash.replace('#view-','');
+    if(TABS.some(t=>t.id===id)) show(id);
+  } else {
+    show('dashboard');
+  }
+
+  // ====== IndexedDB + helpers (same as previous) ======
+  const DB_NAME='fs-logbook-v5';
+  const DB_VERSION=5;
+  const stores=['temperatures','cleaning','audits','equipment','staff'];
+  let db;
+  const openDB = () => new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const d=e.target.result;
+      stores.forEach(s=>{
+        if(!d.objectStoreNames.contains(s)){
+          const os=d.createObjectStore(s,{keyPath:'id',autoIncrement:true});
+          if(s!=='staff') os.createIndex('by_time','time');
+          if(s==='staff'){ os.createIndex('by_name','name',{unique:false}); }
+        }
+      });
+    };
+    req.onsuccess=()=>{db=req.result; resolve(db)};
+    req.onerror=()=>reject(req.error);
+  });
+  const tx = (store, mode='readonly') => db.transaction(store, mode).objectStore(store);
+  const add = (store, value) => new Promise((res,rej)=>{const r=tx(store,'readwrite').add(value); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error)});
+  const getAll = (store) => new Promise((res,rej)=>{const r=tx(store).getAll(); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error)});
+  const put = (store, value) => new Promise((res,rej)=>{const r=tx(store,'readwrite').put(value); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error)});
+  const del = (store, key) => new Promise((res,rej)=>{const r=tx(store,'readwrite').delete(key); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error)});
+
+  const $ = (id)=>document.getElementById(id);
+  const toISO = (dt)=> dt ? new Date(dt).toISOString() : new Date().toISOString();
+  const blobToDataURL = (blob)=> new Promise((resolve)=>{ const r=new FileReader(); r.onload=()=>resolve(r.result); r.readAsDataURL(blob); });
+
+  // Staff COMBOBOX
+  const staffCache = { list: [] };
+  async function loadStaff(){
+    await openDB();
+    staffCache.list = (await getAll('staff')).map(s=>({name:s.name||'', role:s.role||'', id:s.id})).sort((a,b)=>a.name.localeCompare(b.name));
+    renderAllCombos();
+  }
+  function renderCombo(listEl, query){
+    const wrap = listEl;
+    const q = (query||'').trim().toLowerCase();
+    const matches = staffCache.list.filter(s => s.name.toLowerCase().includes(q));
+    const icon = '<span class="combo-hint">'+ (q? 'Enter to use typed name' : 'Click a name or type') +'</span>';
+    if(!staffCache.list.length){
+      wrap.innerHTML = '<div class="combo-empty">No staff yet — add names in the Staff tab.</div>';
+      return;
+    }
+    if(!matches.length){
+      wrap.innerHTML = '<div class="combo-empty">No matches. '+icon+'</div>';
+      return;
+    }
+    wrap.innerHTML = matches.map((s,i)=>`<div class="combo-item${i===0?' active':''}" data-name="${s.name.replace(/"/g,'&quot;')}"><span>${s.name}</span><span class="combo-hint">${s.role||''}</span></div>`).join('');
+    wrap.querySelectorAll('.combo-item').forEach(el=>{
+      el.addEventListener('mousedown', (e)=>{
+        e.preventDefault();
+        const name = el.getAttribute('data-name');
+        const inputId = wrap.getAttribute('data-for');
+        const input = document.getElementById(inputId);
+        input.value = name;
+        hideCombo(wrap);
+        input.dispatchEvent(new Event('change'));
+      });
+    });
+  }
+  function showCombo(listEl){ listEl.classList.remove('hidden'); }
+  function hideCombo(listEl){ listEl.classList.add('hidden'); }
+  function wireCombo(inputEl, listEl){
+    listEl.setAttribute('data-for', inputEl.id);
+    inputEl.addEventListener('focus', ()=>{ renderCombo(listEl, inputEl.value); showCombo(listEl); });
+    inputEl.addEventListener('click', ()=>{ renderCombo(listEl, inputEl.value); showCombo(listEl); });
+    inputEl.addEventListener('input', ()=>{ renderCombo(listEl, inputEl.value); showCombo(listEl); });
+    inputEl.addEventListener('keydown', (e)=>{
+      const items = Array.from(listEl.querySelectorAll('.combo-item'));
+      const active = listEl.querySelector('.combo-item.active');
+      const idx = items.indexOf(active);
+      if(e.key==='ArrowDown'){ e.preventDefault(); const next = items[Math.min(idx+1, items.length-1)] || items[0]; items.forEach(i=>i.classList.remove('active')); if(next){ next.classList.add('active'); }; }
+      if(e.key==='ArrowUp'){ e.preventDefault(); const prev = items[Math.max(idx-1, 0)] || items[items.length-1]; items.forEach(i=>i.classList.remove('active')); if(prev){ prev.classList.add('active'); }; }
+      if(e.key==='Enter'){
+        if(active){ e.preventDefault(); active.dispatchEvent(new Event('mousedown')); }
+      }
+      if(e.key==='Escape'){ hideCombo(listEl); }
+    });
+    inputEl.addEventListener('blur', ()=> setTimeout(()=> hideCombo(listEl), 120));
+  }
+  function renderAllCombos(){
+    const combos = [
+      {input:$('tempStaff'), list:$('tempStaffList')},
+      {input:$('cleanStaff'), list:$('cleanStaffList')},
+      {input:$('auditStaff'), list:$('auditStaffList')},
+    ];
+    combos.forEach(c=>{ if(c.input && c.list){ renderCombo(c.list, c.input.value); } });
+  }
+
+  // Filters
+  let filter = {from:null,to:null,type:''};
+  $('applyFilter').onclick=()=>{
+    filter.from=$('filterFrom').value? new Date($('filterFrom').value).toISOString():null;
+    filter.to=$('filterTo').value? new Date($('filterTo').value).toISOString():null;
+    filter.type=$('filterType').value || '';
+    refreshAll();
+  };
+  $('clearFilter').onclick=()=>{
+    $('filterFrom').value=''; $('filterTo').value=''; $('filterType').value='';
+    filter={from:null,to:null,type:''}; refreshAll();
+  };
+
+  // Notifications
+  $('notifyBtn').onclick=async()=>{
+    try{
+      if(!('Notification' in window)) return alert('Notifications not supported in this browser.');
+      const perm = await Notification.requestPermission();
+      if(perm!=='granted') alert('Notifications permission was not granted.');
+      else alert('Notifications enabled.');
+    }catch(e){ console.warn(e); alert('Could not request notifications.'); }
+  };
+
+  // Backup / Restore
+  $('backupBtn').onclick=async()=>{
+    await openDB();
+    const [temps,cleaning,audits,equipment,staff] = await Promise.all([getAll('temperatures'), getAll('cleaning'), getAll('audits'), getAll('equipment'), getAll('staff')]);
+    const conv = async (arr)=>Promise.all(arr.map(async item=>{
+      const it={...item};
+      for(const k of ['photo','attachment']){ if(it[k] instanceof Blob){ it[k] = await blobToDataURL(it[k]); } }
+      return it;
+    }));
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      temperatures: await conv(temps),
+      cleaning: await conv(cleaning),
+      audits: await conv(audits),
+      equipment,
+      staff
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='fs-logbook-backup.json'; a.click();
+  };
+  $('restoreBtn').onclick=()=>$('restoreFile').click();
+  $('restoreFile').onchange=async(e)=>{
+    const file=e.target.files[0]; if(!file) return;
+    const text=await file.text(); const data=JSON.parse(text);
+    await openDB();
+    for(const s of ['temperatures','cleaning','audits','equipment','staff']){
+      const arr = data[s] || [];
+      for(const item of arr){
+        for(const k of ['photo','attachment']){
+          if(item[k] && typeof item[k]==='string' && item[k].startsWith('data:')){
+            const res = await fetch(item[k]); const b = await res.blob(); item[k]=b;
+          }
+        }
+        delete item.id; await add(s, item);
+      }
+    }
+    alert('Backup imported.'); refreshAll();
+  };
+
+  // BLE (optional)
+  document.getElementById('bleBtn')?.addEventListener('click', async ()=>{
+    try{
+      const device = await navigator.bluetooth.requestDevice({ filters:[{services:['health_thermometer']}], optionalServices:['device_information'] });
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService('health_thermometer');
+      try{
+        const ch = await service.getCharacteristic('temperature_measurement');
+        await ch.startNotifications();
+        ch.oncharacteristicvaluechanged = (ev)=>{
+          const dv = ev.target.value;
+          let tempF = null;
+          if(dv.byteLength>=5){
+            const v = new DataView(dv.buffer);
+            const celsius = v.getFloat32(1,true);
+            tempF = (celsius*9/5)+32;
+          }
+          if(tempF){ $('tempValue').value = tempF.toFixed(1); $('tempSensor').value = device.name || 'BLE Thermometer'; }
+        };
+        alert('Connected. Take a measurement to auto-fill.');
+      }catch(e){
+        alert('Connected, but could not subscribe to measurements. Enter manually.');
+      }
+    }catch(err){
+      console.warn('BLE error', err); alert('Could not connect to a BLE thermometer (optional).');
+    }
+  });
+
+  // Submit handlers
+  $('tempForm').onsubmit=async(e)=>{
+    e.preventDefault(); await openDB();
+    const file=$('tempPhoto').files[0];
+    const staff = $('tempStaff').value.trim();
+    const rec={
+      time: toISO($('tempTime').value||Date.now()),
+      item: $('tempItem').value.trim(),
+      valueF: parseFloat($('tempValue').value),
+      sensor: $('tempSensor').value.trim()||'Manual',
+      staff,
+      notes: $('tempNotes').value.trim(),
+      photo: file || null,
+      type:'temperatures'
+    };
+    await add('temperatures', rec); e.target.reset(); refreshTemps(); refreshDashboard();
+  };
+
+  $('cleanForm').onsubmit=async(e)=>{
+    e.preventDefault(); await openDB();
+    const file=$('cleanPhoto').files[0];
+    const equipSel=$('cleanEquipment'); const equipId = equipSel.value ? parseInt(equipSel.value) : null;
+    const equipName = equipSel.selectedOptions[0]?.text || '';
+    const staff = $('cleanStaff').value.trim();
+    const rec={
+      time: toISO($('cleanTime').value||Date.now()),
+      task: $('cleanTask').value.trim(),
+      equipmentId: equipId, equipmentName: equipName,
+      staff,
+      notes: $('cleanNotes').value.trim(),
+      photo: file || null,
+      type:'cleaning'
+    };
+    await add('cleaning', rec); e.target.reset(); refreshCleaning(); refreshDashboard();
+  };
+
+  $('auditForm').onsubmit=async(e)=>{
+    e.preventDefault(); await openDB();
+    const file=$('auditPhoto').files[0];
+    const staff = $('auditStaff').value.trim();
+    const rec={
+      time: toISO($('auditTime').value||Date.now()),
+      auditType: $('auditType').value.trim(),
+      result: $('auditResult').value.trim(),
+      staff,
+      notes: $('auditNotes').value.trim(),
+      attachment: file || null,
+      type:'audits'
+    };
+    await add('audits', rec); e.target.reset(); refreshAudits(); refreshDashboard();
+  };
+
+  // Equipment scheduling + monthly auto-roll
+  const scheduleDraft=[];
+  const schedType=$('schedType'); const weeklyPicker=$('weeklyPicker'); const monthlyPicker=$('monthlyPicker'); const schedTime=$('schedTime');
+  const monthGrid=document.getElementById('monthGrid'); const monthWarning=document.getElementById('monthWarning'); const autoRollToggle=document.getElementById('autoRollToggle');
+
+  function buildMonthGrid(){
+    if(!monthGrid) return;
+    monthGrid.innerHTML='';
+    for(let d=1; d<=31; d++){
+      const cell=document.createElement('div');
+      cell.className='day-cell';
+      cell.textContent=String(d);
+      cell.dataset.day=d;
+      cell.onclick=()=>{ cell.classList.toggle('selected'); renderMonthWarning(); };
+      monthGrid.appendChild(cell);
+    }
+  }
+  function getSelectedMonthDays(){
+    return Array.from(monthGrid?.querySelectorAll('.day-cell.selected')||[]).map(c=>parseInt(c.dataset.day,10)).sort((a,b)=>a-b);
+  }
+  function renderMonthWarning(){
+    if(!monthWarning) return;
+    const days=getSelectedMonthDays();
+    const risky=days.filter(d=>d>=29);
+    if(risky.length && !autoRollToggle.checked){
+      monthWarning.classList.remove('hidden');
+      monthWarning.textContent = `Heads-up: ${risky.join(', ')} may not occur every month. Turn on "Use last day of month" to auto-roll.`;
+    }else{
+      monthWarning.classList.add('hidden');
+      monthWarning.textContent='';
+    }
+  }
+
+  schedType.onchange=()=>{
+    const isMonthly = schedType.value==='monthly';
+    weeklyPicker.classList.toggle('hidden', isMonthly);
+    monthlyPicker.classList.toggle('hidden', !isMonthly);
+    renderMonthWarning();
+  };
+
+  buildMonthGrid();
+  schedType.onchange();
+  autoRollToggle.addEventListener('change', renderMonthWarning);
+
+  function renderScheduleList(el, list){
+    if(!el) return;
+    if(!list.length){ el.innerHTML='<span class="note">No schedules added yet.</span>'; return; }
+    const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    el.innerHTML = list.map((s)=>{
+      if(s.type==='weekly'){
+        return `<span class="pill">Weekly: ${s.daysOfWeek.map(d=>days[d]).join('/')} @ ${s.time}</span>`;
+      }else{
+        const doms = (s.daysOfMonth||[s.dayOfMonth]).join(',');
+        const ar = s.autoRollLastDay ? ' (auto-roll)' : '';
+        return `<span class="pill">Monthly: days ${doms} @ ${s.time}${ar}</span>`;
+      }
+    }).join('');
+  }
+
+  document.getElementById('addSchedule').onclick=()=>{
+    const time = (schedTime.value||'').trim();
+    if(!/^\d{1,2}:\d{2}$/.test(time)){ alert('Enter time as HH:MM (24h).'); return; }
+    if(schedType.value==='weekly'){
+      const checks = weeklyPicker.querySelectorAll('input[type="checkbox"]:checked');
+      const days = Array.from(checks).map(c=>parseInt(c.value,10));
+      if(!days.length){ alert('Pick at least one weekday.'); return; }
+      scheduleDraft.push({type:'weekly', daysOfWeek: days, time});
+    }else{
+      const days = getSelectedMonthDays();
+      if(!days.length){ alert('Select at least one day of the month.'); return; }
+      scheduleDraft.push({type:'monthly', daysOfMonth: days, time, autoRollLastDay: !!autoRollToggle.checked});
+      monthGrid.querySelectorAll('.day-cell.selected').forEach(c=>c.classList.remove('selected'));
+      autoRollToggle.checked=false;
+      renderMonthWarning();
+    }
+    renderScheduleList(document.getElementById('scheduleList'), scheduleDraft);
+  };
+
+  document.getElementById('addEquipBtn').onclick=async(e)=>{
+    e.preventDefault(); await openDB();
+    const name=$('equipName').value.trim();
+    const enabled = $('equipRemindersEnabled').value==='yes';
+    const schedules = enabled ? scheduleDraft.slice() : [];
+    if(!name){ alert('Enter equipment name.'); return; }
+    await add('equipment', {time:new Date().toISOString(), name, reminderEnabled: enabled, schedules, firedKeys:{}, monthWarned:{} });
+    scheduleDraft.length=0; renderScheduleList(document.getElementById('scheduleList'), scheduleDraft);
+    $('equipName').value=''; $('equipRemindersEnabled').value='no'; $('schedType').value='weekly'; schedType.onchange(); $('schedTime').value='';
+    document.querySelectorAll('#weeklyPicker input[type="checkbox"]').forEach(c=>c.checked=false);
+    refreshEquipment();
+  };
+
+  async function refreshEquipment(){
+    await openDB(); const equipment = await getAll('equipment');
+    const sel=$('cleanEquipment'); if(sel){ sel.innerHTML='<option value="">None</option>'; }
+    equipment.forEach(eq=>{
+      const opt=document.createElement('option'); opt.value=eq.id; opt.textContent=eq.name; sel?.appendChild(opt);
+    });
+    const tb=document.querySelector('#equipTable tbody'); if(tb) tb.innerHTML='';
+    const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    equipment.forEach(eq=>{
+      const scheds=(eq.schedules||[]).map(s=> s.type==='weekly'
+        ? `Weekly ${s.daysOfWeek.map(d=>days[d]).join('/')} @ ${s.time}`
+        : `Monthly days ${(s.daysOfMonth||[s.dayOfMonth]).join(', ')} @ ${s.time}${s.autoRollLastDay?' (auto-roll)':''}`).join('<br>');
+      const enabled=eq.reminderEnabled?'Yes':'No';
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${eq.name}</td><td>${scheds||'-'}</td><td>${enabled}</td>
+        <td class="flex">
+          <button class="btn small" data-edit="${eq.id}">Edit</button>
+          <button class="btn small" data-toggle="${eq.id}">${eq.reminderEnabled?'Disable':'Enable'}</button>
+          <button class="btn small" data-del="${eq.id}">Delete</button>
+        </td>`;
+      tb?.appendChild(tr);
+    });
+    tb?.querySelectorAll('button[data-del]').forEach(b=>b.onclick=async()=>{ await del('equipment', parseInt(b.dataset.del)); refreshEquipment(); });
+    tb?.querySelectorAll('button[data-toggle]').forEach(b=>b.onclick=async()=>{
+      const id=parseInt(b.dataset.toggle);
+      const equipmentAll=await getAll('equipment'); const item=equipmentAll.find(x=>x.id===id); if(!item) return;
+      item.reminderEnabled = !item.reminderEnabled; await put('equipment', item); refreshEquipment();
+    });
+    tb?.querySelectorAll('button[data-edit]').forEach(b=>b.onclick=async()=>{
+      const id=parseInt(b.dataset.edit);
+      const equipmentAll=await getAll('equipment'); const item=equipmentAll.find(x=>x.id===id); if(!item) return;
+      const current = (item.schedules||[]).map(s=> s.type==='weekly'
+        ?`weekly ${s.daysOfWeek.map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(',')} ${s.time}`
+        :`monthly ${(s.daysOfMonth||[s.dayOfMonth]).join(',')} ${s.time}${s.autoRollLastDay?' autoroll':''}`).join('\n');
+      const action = prompt('Edit schedules (one per line). Add "autoroll" to auto-roll the last day.\nExamples:\nweekly Mon,Wed 09:00\nmonthly 1,15,31 10:30 autoroll\n(Current will be replaced)', current);
+      if(action===null) return;
+      const lines = action.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+      const parseDay=(name)=>['sun','mon','tue','wed','thu','fri','sat'].indexOf(name.toLowerCase().slice(0,3));
+      const parsed=[];
+      for(const line of lines){
+        const mWeekly = line.match(/^weekly\s+([A-Za-z,\s]+)\s+(\d{1,2}:\d{2})$/i);
+        const mMonthly = line.match(/^monthly\s+([0-9,\s]+)\s+(\d{1,2}:\d{2})(\s+autoroll)?$/i);
+        if(mWeekly){
+          const days = mWeekly[1].split(',').map(s=>parseDay(s.trim())).filter(d=>d>=0);
+          const time=mWeekly[2];
+          if(!days.length){ alert('Invalid weekly days in: '+line); return; }
+          parsed.push({type:'weekly', daysOfWeek:days, time});
+        }else if(mMonthly){
+          const doms = mMonthly[1].split(',').map(s=>parseInt(s.trim(),10)).filter(n=>n>=1&&n<=31);
+          const time=mMonthly[2];
+          const ar=!!mMonthly[3];
+          if(!doms.length){ alert('Invalid monthly days in: '+line); return; }
+          parsed.push({type:'monthly', daysOfMonth:doms, time, autoRollLastDay: ar});
+        }else{
+          alert('Could not parse: '+line); return;
+        }
+      }
+      item.schedules = parsed; await put('equipment', item); refreshEquipment();
+    });
+  }
+
+  // Renderers + dashboard
+  function inFilter(rec){
+    if(filter.type && rec.type!==filter.type) return false;
+    if(filter.from && rec.time < filter.from) return false;
+    if(filter.to && rec.time > new Date(new Date(filter.to).getTime()+24*3600*1000).toISOString()) return false;
+    return true;
+  }
+  async function refreshTemps(){
+    await openDB(); const rows=(await getAll('temperatures')).filter(inFilter).sort((a,b)=>b.time.localeCompare(a.time));
+    const tb=document.querySelector('#tempsTable tbody'); if(tb) tb.innerHTML='';
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      const photoCell = r.photo ? '<span class="pill">View</span>' : '';
+      tr.innerHTML = `<td>${new Date(r.time).toLocaleString()}</td><td>${r.item}</td><td>${(r.valueF && r.valueF.toFixed ? r.valueF.toFixed(1) : '')}</td>
+        <td>${r.sensor||''}</td><td>${r.staff||''}</td><td>${r.notes||''}</td><td>${photoCell}</td>`;
+      if(r.photo){
+        tr.querySelector('td:last-child').onclick=()=>{ const url=URL.createObjectURL(r.photo); window.open(url,'_blank'); };
+      }
+      tb?.appendChild(tr);
+    });
+    document.getElementById('exportTempsCsv').onclick=()=>{
+      const toCSV=(arr,headers)=>[headers.join(','), ...arr.map(row=>headers.map(h=>`"${(''+(row[h]??'')).replaceAll('"','""')}"`).join(','))].join('\n');
+      const download=(name,csv)=>{ const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); };
+      download('temperatures.csv', toCSV(rows.map(r=>({time:r.time,item:r.item,valueF:r.valueF,sensor:r.sensor,staff:r.staff,notes:r.notes})), ['time','item','valueF','sensor','staff','notes']));
+    };
+  }
+  async function refreshCleaning(){
+    await openDB(); const rows=(await getAll('cleaning')).filter(inFilter).sort((a,b)=>b.time.localeCompare(a.time));
+    const tb=document.querySelector('#cleanTable tbody'); if(tb) tb.innerHTML='';
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      const photoCell = r.photo ? '<span class="pill">View</span>' : '';
+      tr.innerHTML = `<td>${new Date(r.time).toLocaleString()}</td><td>${r.task}</td><td>${r.equipmentName||''}</td>
+        <td>${r.staff||''}</td><td>${r.notes||''}</td><td>${photoCell}</td>`;
+      if(r.photo){
+        tr.querySelector('td:last-child').onclick=()=>{ const url=URL.createObjectURL(r.photo); window.open(url,'_blank'); };
+      }
+      tb?.appendChild(tr);
+    });
+    document.getElementById('exportCleaningCsv').onclick=()=>{
+      const toCSV=(arr,headers)=>[headers.join(','), ...arr.map(row=>headers.map(h=>`"${(''+(row[h]??'')).replaceAll('"','""')}"`).join(','))].join('\n');
+      const download=(name,csv)=>{ const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); };
+      download('cleaning.csv', toCSV(rows.map(r=>({time:r.time,task:r.task,equipment:r.equipmentName,staff:r.staff,notes:r.notes})), ['time','task','equipment','staff','notes']));
+    };
+  }
+  async function refreshAudits(){
+    await openDB(); const rows=(await getAll('audits')).filter(inFilter).sort((a,b)=>b.time.localeCompare(a.time));
+    const tb=document.querySelector('#auditTable tbody'); if(tb) tb.innerHTML='';
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      const attCell = r.attachment ? '<span class="pill">Open</span>' : '';
+      tr.innerHTML = `<td>${new Date(r.time).toLocaleString()}</td><td>${r.auditType}</td><td>${r.result||''}</td>
+        <td>${r.staff||''}</td><td>${r.notes||''}</td><td>${attCell}</td>`;
+      if(r.attachment){
+        tr.querySelector('td:last-child').onclick=()=>{ const url=URL.createObjectURL(r.attachment); window.open(url,'_blank'); };
+      }
+      tb?.appendChild(tr);
+    });
+    document.getElementById('exportAuditsCsv').onclick=()=>{
+      const toCSV=(arr,headers)=>[headers.join(','), ...arr.map(row=>headers.map(h=>`"${(''+(row[h]??'')).replaceAll('"','""')}"`).join(','))].join('\n');
+      const download=(name,csv)=>{ const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); };
+      download('audits.csv', toCSV(rows.map(r=>({time:r.time,auditType:r.auditType,result:r.result,staff:r.staff,notes:r.notes})), ['time','auditType','result','staff','notes']));
+    };
+  }
+  async function refreshStaff(){
+    await openDB();
+    const list = (await getAll('staff')).sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+    const tb=document.querySelector('#staffTable tbody'); if(tb) tb.innerHTML='';
+    list.forEach(s=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${s.name||''}</td><td>${s.role||''}</td>
+        <td class="flex">
+          <button class="btn small" data-edit="${s.id}">Edit</button>
+          <button class="btn small" data-del="${s.id}">Delete</button>
+        </td>`;
+      tb?.appendChild(tr);
+    });
+    tb?.querySelectorAll('button[data-del]').forEach(b=>b.onclick=async()=>{ await del('staff', parseInt(b.dataset.del)); await refreshStaff(); await loadStaff(); });
+    tb?.querySelectorAll('button[data-edit]').forEach(b=>b.onclick=async()=>{
+      const id=parseInt(b.dataset.edit,10);
+      const all=await getAll('staff'); const item=all.find(x=>x.id===id); if(!item) return;
+      const name=prompt('Edit staff name:', item.name||''); if(name===null) return;
+      const role=prompt('Edit role (optional):', item.role||''); if(role===null) return;
+      item.name = name.trim(); item.role = role.trim();
+      await put('staff', item); await refreshStaff(); await loadStaff();
+    });
+  }
+
+  async function refreshDashboard(){
+    await openDB();
+    const [t,c,a] = await Promise.all([getAll('temperatures'), getAll('cleaning'), getAll('audits')]);
+    const k = (arr, days)=>arr.filter(x=>Date.now()-new Date(x.time).getTime()<days*864e5).length;
+    document.getElementById('kpiTemps').textContent = k(t,7);
+    document.getElementById('kpiClean').textContent = k(c,7);
+    document.getElementById('kpiAudits').textContent = k(a,90);
+    const all=[...t,...c,...a].sort((x,y)=>y.time.localeCompare(x.time)).slice(0,10);
+    const tb=document.querySelector('#recentTable tbody'); if(tb) tb.innerHTML='';
+    all.forEach(r=>{
+      const details = r.type==='temperatures' ? `${r.item} – ${r.valueF?.toFixed?.(1)}°F`
+        : r.type==='cleaning' ? `${r.task} – ${r.equipmentName||''}`
+        : `${r.auditType} – ${r.result||''}`;
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${new Date(r.time).toLocaleString()}</td><td>${r.type}</td><td>${details}</td><td>${r.staff||''}</td>`;
+      tb?.appendChild(tr);
+    });
+  }
+
+  async function refreshAll(){ await Promise.all([refreshTemps(), refreshCleaning(), refreshAudits(), refreshEquipment(), refreshStaff(), refreshDashboard()]); }
+
+  // Reminders & monthly auto-roll
+  function hhmm(d){ return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}); }
+  function ymd(d){ const y=d.getFullYear(), m=(d.getMonth()+1).toString().padStart(2,'0'), day=d.getDate().toString().padStart(2,'0'); return `${y}-${m}-${day}`; }
+  function ym(d){ const y=d.getFullYear(), m=(d.getMonth()+1).toString().padStart(2,'0'); return `${y}-${m}`; }
+  function dow(d){ return d.getDay(); }
+  function daysInMonth(y,m){ return new Date(y, m, 0).getDate(); }
+
+  function gotoCleaningWithEquip(equipId){
+    show('cleaning');
+    const sel=$('cleanEquipment'); if(sel){ sel.value = String(equipId); }
+    const t = new Date();
+    const pad=(n)=>n.toString().padStart(2,'0');
+    const local = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`;
+    $('cleanTime').value = local;
+    $('cleanTask').focus();
+    location.hash = '#log-cleaning?equipId='+equipId;
+  }
+
+  async function checkReminders(){
+    await openDB();
+    const equipment = await getAll('equipment');
+    const now = new Date();
+    const keyDate = ymd(now);
+    const timeNow = hhmm(now);
+    const dayIndex = dow(now);
+    const dim = daysInMonth(now.getFullYear(), now.getMonth()+1);
+    for(const eq of equipment){
+      if(!eq.reminderEnabled) continue;
+      for(const s of (eq.schedules||[])){
+        let shouldFire=false;
+        if(s.type==='weekly'){
+          if((s.daysOfWeek||[]).includes(dayIndex) && s.time===timeNow) shouldFire=true;
+        }else if(s.type==='monthly'){
+          const srcDays = (s.daysOfMonth||[s.dayOfMonth]);
+          const adjSet = new Set();
+          for(const d of srcDays){
+            if(s.autoRollLastDay){ adjSet.add(Math.min(d, dim)); }
+            else { adjSet.add(d); }
+          }
+          if(adjSet.has(now.getDate()) && s.time===timeNow) shouldFire=true;
+        }
+        if(shouldFire){
+          const firedKeys = eq.firedKeys || {};
+          const fireKey = `${keyDate}@${timeNow}@${JSON.stringify(s)}`;
+          if(!firedKeys[fireKey]){
+            try{
+              const reg = await navigator.serviceWorker.getRegistration();
+              if('Notification' in window && Notification.permission==='granted' && reg){
+                reg.showNotification('Cleaning Reminder', {
+                  body: `${eq.name}: ${s.type==='weekly'?'Weekly':'Monthly'} at ${timeNow}. Tap to log in Cleaning.`,
+                  icon: './assets/icon-192.png',
+                  tag: 'equip-'+eq.id+'-'+fireKey,
+                  data: { equipId: eq.id }
+                });
+              }else{
+                if(confirm(`Reminder: ${eq.name} (${timeNow}). Log in Cleaning now?`)){
+                  gotoCleaningWithEquip(eq.id);
+                }
+              }
+            }catch(e){ console.warn('Notification error', e); }
+            eq.firedKeys = Object.assign({}, firedKeys, {[fireKey]: true});
+            await put('equipment', eq);
+          }
+        }
+      }
+    }
+  }
+
+  async function monthlyMismatchWarnings(){
+    await openDB();
+    const equipment = await getAll('equipment');
+    const now = new Date();
+    const key = ym(now);
+    const dim = daysInMonth(now.getFullYear(), now.getMonth()+1);
+    for(const eq of equipment){
+      if(!eq.reminderEnabled) continue;
+      const taken = eq.monthWarned || {};
+      if(taken[key]) continue;
+      const offenders = new Set();
+      for(const s of (eq.schedules||[])){
+        if(s.type==='monthly' && !s.autoRollLastDay){
+          for(const d of (s.daysOfMonth||[s.dayOfMonth])){
+            if(d>dim) offenders.add(d);
+          }
+        }
+      }
+      if(offenders.size){
+        try{
+          const reg = await navigator.serviceWorker.getRegistration();
+          const days = Array.from(offenders).sort((a,b)=>a-b).join(', ');
+          const msg = `This month has ${dim} days. ${eq.name} has monthly alarms for ${days} that won't occur. Enable "auto-roll to last day" or add an alternate.`;
+          if('Notification' in window && Notification.permission==='granted' && reg){
+            reg.showNotification('Monthly alarm won’t occur', {
+              body: msg,
+              icon: './assets/icon-192.png',
+              tag: 'equip-mismatch-'+eq.id+'-'+key,
+              data: { equipId: eq.id }
+            });
+          }else{
+            console.warn(msg);
+          }
+        }catch(e){ console.warn('Warn notification error', e); }
+        eq.monthWarned = Object.assign({}, taken, {[key]: true});
+        await put('equipment', eq);
+      }else{
+        eq.monthWarned = Object.assign({}, taken, {[key]: true});
+        await put('equipment', eq);
+      }
+    }
+  }
+
+  setInterval(checkReminders, 30000);
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ checkReminders(); monthlyMismatchWarnings(); } });
+
+  // Hash prefill handler
+  function parseHash(){
+    try{
+      const h=location.hash||'';
+      const m=h.match(/#log-cleaning\?equipId=(\d+)/);
+      if(m){
+        const id=parseInt(m[1],10);
+        gotoCleaningWithEquip(id);
+      }
+    }catch(e){}
+  }
+  window.addEventListener('hashchange', parseHash);
+
+  function wireAllCombos(){
+    wireCombo($('tempStaff'), $('tempStaffList'));
+    wireCombo($('cleanStaff'), $('cleanStaffList'));
+    wireCombo($('auditStaff'), $('auditStaffList'));
+  }
+
+  if('serviceWorker' in navigator && window.isSecureContext && location.protocol !== 'file:'){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js')); } else { console.log('Service Worker disabled (local file mode or insecure context).'); }
+
+  openDB()
+    .then(()=>{ wireAllCombos(); return loadStaff(); })
+    .then(refreshAll)
+    .then(()=>{ parseHash(); checkReminders(); monthlyMismatchWarnings(); checkNavFit(); });
+  
+    // === Non-destructive toast/error helpers (appended) ===
+    (function(){
+      const toastEl=document.getElementById('toast');
+      function makeToast(type, title, desc, timeout=5200){
+        if(!toastEl) return;
+        const el=document.createElement('div');
+        el.className=`toast-item ${type}`;
+        el.innerHTML=`<div class="toast-icon">${type==='error'?'⚠️':type==='success'?'✅':'ℹ️'}</div>
+          <div><div class="toast-title">${title||''}</div>${desc?`<div class="toast-desc">${desc}</div>`:''}</div>
+          <button class="toast-close" aria-label="Dismiss">✕</button>`;
+        el.querySelector('.toast-close').onclick=()=> el.remove();
+        toastEl.appendChild(el);
+        if(timeout){ setTimeout(()=> el.remove(), timeout); }
+        return el;
+      }
+      window.__toast = { makeToast };
+
+      // Gracefully override window.alert to use a toast (non-breaking)
+      const nativeAlert = window.alert;
+      window.alert = function(msg){ try{ makeToast('warn','Notice', String(msg)); }catch(e){ nativeAlert(String(msg)); } };
+
+      // Friendly validators (capture phase so we can stop invalid submissions without touching existing code)
+      const $=id=>document.getElementById(id);
+      const within=(v, min, max)=> (typeof v==='number' && !Number.isNaN(v) && v>=min && v<=max);
+      const isHHMM=(s)=> /^\d{1,2}:\d{2}$/.test(s||'');
+
+      function attachValidation(formId, fn){
+        const form=$(formId); if(!form) return;
+        form.setAttribute('novalidate','true');
+        form.addEventListener('submit', (e)=>{
+          try{
+            if(fn && fn()===false){
+              e.preventDefault();
+              e.stopImmediatePropagation();
+            }
+          }catch(err){
+            makeToast('error','Couldn’t submit', 'Please try again.');
+          }
+        }, true); // capture
+      }
+
+      function validateTemp(){
+        const item=$('tempItem'); const value=$('tempValue');
+        if(!item || !value) return true; // don’t block if fields aren’t present
+        const itemVal=(item.value||'').trim();
+        const num = parseFloat(value.value);
+        if(!itemVal){ makeToast('error','Missing information','Please enter the food/location.'); return false; }
+        if(!within(num, 0, 300)){ makeToast('error','Temperature looks off','Enter a value between 0 and 300 °F.'); return false; }
+        const t=($('tempTime') && $('tempTime').value); if(t && Number.isNaN(Date.parse(t))){ makeToast('error','Invalid date/time','Please pick a valid time.'); return false; }
+        return true;
+      }
+      function validateClean(){
+        const task=$('cleanTask'); if(!task) return true;
+        if(!(task.value||'').trim()){ makeToast('error','Missing task','Please describe the cleaning/sanitizing task.'); return false; }
+        return true;
+      }
+      function validateAudit(){
+        const t=$('auditType'); if(!t) return true;
+        if(!(t.value||'').trim()){ makeToast('error','Missing type','Please enter an audit/inspection type.'); return false; }
+        const time=($('auditTime') && $('auditTime').value); if(time && Number.isNaN(Date.parse(time))){ makeToast('error','Invalid date/time','Please pick a valid time.'); return false; }
+        return true;
+      }
+
+      // Attach (won’t throw if forms are renamed/missing)
+      attachValidation('tempForm', validateTemp);
+      attachValidation('cleanForm', validateClean);
+      attachValidation('auditForm', validateAudit);
+
+      // Backup import enhancements (wrap file input handler if present)
+      const restoreInput = document.getElementById('restoreFile');
+      if(restoreInput){
+        restoreInput.addEventListener('change', async (e)=>{
+          const file=e.target.files?.[0];
+          if(!file){ makeToast('warn','No file selected','Choose a backup JSON exported by this app.'); return; }
+          try{
+            const text = await file.text();
+            try{ JSON.parse(text); } catch(parseErr){ makeToast('error','Import failed','That doesn’t look like valid JSON.'); }
+          }catch(err){ makeToast('error','Import failed','Couldn’t read the file.'); }
+        }, false);
+      }
+    })();
+    // === Feedback (Netlify auto-send) v21 ===
+    (function(){
+      const FEEDBACK_ENDPOINT = "/.netlify/functions/feedback";
+      const TO_EMAIL = "isaac.guthrie05@gmail.com";
+      const APP_NAME = "Lhyst";
+      const FIXED_SUBJECT = "Feedback";
+      const $ = (id)=> document.getElementById(id);
+
+      function addNavFeedback(){
+        const nav = document.getElementById('menuWrap') || document.querySelector('header nav') || document.querySelector('header');
+        const btn = document.createElement('button');
+        btn.className = 'btn nav-feedback';
+        btn.id = 'openFeedbackBtn';
+        btn.textContent = 'Feedback';
+        btn.type = 'button';
+        btn.addEventListener('click', openModal);
+        if(nav) nav.appendChild(btn);
+        else{
+          const fab=document.createElement('button');
+          fab.className='btn primary feedback-fab';
+          fab.textContent='Feedback';
+          fab.type='button';
+          fab.addEventListener('click', openModal);
+          document.body.appendChild(fab);
+        }
+      }
+
+      function openModal(){ $('feedbackModal')?.classList.remove('hidden'); }
+      function closeModal(){ $('feedbackModal')?.classList.add('hidden'); }
+
+      function collect(){
+        const data = {
+          category: $('fbCategory').value,
+          urgency:  $('fbUrgency').value,
+          name:     ($('fbName').value||'').trim(),
+          email:    ($('fbEmail').value||'').trim(),
+          subject:  "Feedback",
+          message:  ($('fbMessage').value||'').trim(),
+          includeEnv: $('fbIncludeEnv').checked,
+          includeURL: $('fbIncludeURL').checked,
+        };
+        const lines = [];
+        lines.push(`App: ${APP_NAME}`);
+        lines.push(`Category: ${data.category}`);
+        lines.push(`Urgency: ${data.urgency}`);
+        lines.push('');
+        lines.push('Details:');
+        lines.push(data.message);
+        lines.push('');
+        lines.push('---- Context ----');
+        lines.push(`Version: v21`);
+        lines.push(`Time: ${new Date().toISOString()}`);
+        if(data.includeURL) lines.push(`Page: ${location.href}`);
+        if(data.includeEnv){
+          lines.push(`User Agent: ${navigator.userAgent}`);
+          lines.push(`Viewport: ${window.innerWidth}x${window.innerHeight}`);
+          try{ lines.push(`Platform: ${navigator.platform||''}`); }catch(e){}
+        }
+        if(data.name) lines.push(`Reporter: ${data.name}`);
+        if(data.email) lines.push(`Reply-to (provided): ${data.email}`);
+        data.body = lines.join('\n');
+        return data;
+      }
+
+      async function sendFeedback(e){
+        e.preventDefault();
+        const subject = "Feedback";
+        const message = ($('fbMessage').value||'').trim();
+        if(!message){
+          (window.__toast?.makeToast||alert)('error','Missing details','Please describe the issue or idea.'); return;
+        }
+        const data = collect();
+        try{
+          const res = await fetch(FEEDBACK_ENDPOINT, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              to: TO_EMAIL,
+              subject: subject,
+              body: data.body,
+              from: data.email || undefined,
+              name: data.name || undefined
+            })
+          });
+          if(res.ok){
+            (window.__toast?.makeToast||alert)('success','Feedback sent','Thanks! We received your feedback.');
+            closeModal();
+          }else{
+            const t = await res.text();
+            (window.__toast?.makeToast||alert)('error','Couldn’t send feedback', t || 'Please try again later.');
+          }
+        }catch(err){
+          (window.__toast?.makeToast||alert)('error','Network error','Please check your connection and try again.');
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', ()=>{
+        addNavFeedback();
+        const fm = document.getElementById('feedbackForm');
+        const modal = document.getElementById('feedbackModal');
+        document.getElementById('feedbackClose')?.addEventListener('click', closeModal);
+        document.getElementById('fbCancel')?.addEventListener('click', closeModal);
+        fm?.addEventListener('submit', sendFeedback);
+        modal?.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+      });
+    })();
+    // === Robust placeholders (v23) ===
+    (function(){
+      function ensureTablePlaceholders(tbody, colCount, minRows){
+        if(!tbody) return;
+        if(tbody.dataset.phUpdating === '1') return;
+        tbody.dataset.phUpdating = '1';
+        try{
+          var real = tbody.querySelectorAll('tr:not(.placeholder)').length;
+          var olds = tbody.querySelectorAll('tr.placeholder');
+          for(var i=0;i<olds.length;i++){ olds[i].remove(); }
+          var need = Math.max(0, minRows - real);
+          for(var r=0;r<need;r++){
+            var tr = document.createElement('tr');
+            tr.className = 'placeholder';
+            var cells = '';
+            for(var c=0;c<colCount;c++){ cells += '<td><span class="ph"></span></td>'; }
+            tr.innerHTML = cells;
+            tbody.appendChild(tr);
+          }
+        } finally { delete tbody.dataset.phUpdating; }
+      }
+      function attach(selector, cols, min){
+        var tbody = document.querySelector(selector+' tbody');
+        if(!tbody) return;
+        if(tbody.dataset.phObserved==='1') return;
+        var pending=false;
+        var run=function(){
+          if(pending) return; pending=true;
+          requestAnimationFrame(function(){ pending=false; ensureTablePlaceholders(tbody, cols, min); });
+        };
+        var mo=new MutationObserver(run);
+        mo.observe(tbody,{childList:true});
+        run(); setTimeout(run, 200); setTimeout(run, 800);
+        tbody.dataset.phObserved='1';
+      }
+      function wait(selector, cols, min){
+        if(document.querySelector(selector+' tbody')){ attach(selector, cols, min); return; }
+        var mo=new MutationObserver(function(){
+          if(document.querySelector(selector+' tbody')){ attach(selector, cols, min); mo.disconnect(); }
+        });
+        mo.observe(document.body,{childList:true,subtree:true});
+      }
+      window.addEventListener('DOMContentLoaded', function(){
+        wait('#recentTable',4,8);
+        wait('#tempsTable',7,6);
+        wait('#cleanTable',6,6);
+        wait('#auditTable',6,6);
+        wait('#equipTable',4,6);
+        wait('#staffTable',3,6);
+        function wrap(name, sel, cols, min){
+          try{
+            var fn=window[name]; if(typeof fn!=='function'||fn.__phWrapped) return;
+            window[name]=async function(){ var r=await fn.apply(this, arguments); var tb=document.querySelector(sel+' tbody'); ensureTablePlaceholders(tb, cols, min); return r; };
+            window[name].__phWrapped=true;
+          }catch(e){}
+        }
+        wrap('refreshRecent','#recentTable',4,8);
+        wrap('refreshTemps','#tempsTable',7,6);
+        wrap('refreshCleaning','#cleanTable',6,6);
+        wrap('refreshAudits','#auditTable',6,6);
+        wrap('refreshEquipment','#equipTable',4,6);
+        wrap('refreshStaff','#staffTable',3,6);
+        setTimeout(function(){
+          [['#recentTable',4,8],['#tempsTable',7,6],['#cleanTable',6,6],['#auditTable',6,6],['#equipTable',4,6],['#staffTable',3,6]].forEach(function(cfg){
+            var tb=document.querySelector(cfg[0]+' tbody'); ensureTablePlaceholders(tb, cfg[1], cfg[2]);
+          });
+        }, 1200);
+      });
+    })();
+
+    // === Lhyst Feedback (Netlify auto-send, fixed subject) v24 ===
+    (function(){
+      const $ = (id)=> document.getElementById(id);
+      const ENDPOINT = "/.netlify/functions/feedback";
+      const TO = "isaac.guthrie05@gmail.com";
+      const SUBJECT = "Feedback";
+      function openModal(){ $('feedbackModal')?.classList.remove('hidden'); }
+      function closeModal(){ $('feedbackModal')?.classList.add('hidden'); }
+      function ensureFAB(){
+        if(!document.querySelector('.feedback-fab')){
+          const fab=document.createElement('button');
+          fab.className='btn primary feedback-fab';
+          fab.textContent='Feedback';
+          fab.type='button';
+          fab.addEventListener('click', openModal);
+          document.body.appendChild(fab);
+        }
+      }
+      function collect(){
+        const lines = [];
+        lines.push("App: Lhyst");
+        lines.push("Category: "+($('fbCategory')?.value||''));
+        lines.push("Urgency: "+($('fbUrgency')?.value||''));
+        lines.push("");
+        lines.push("Details:");
+        lines.push(($('fbMessage')?.value||'').trim());
+        lines.push("");
+        lines.push("---- Context ----");
+        lines.push("Version: v24");
+        lines.push("Time: "+new Date().toISOString());
+        // Always include environment and URL silently
+        try {
+          lines.push("Page: "+location.href);
+        }catch(e){}
+        try {
+          lines.push("User Agent: "+navigator.userAgent);
+          lines.push("Viewport: "+window.innerWidth+"x"+window.innerHeight);
+          lines.push("Platform: "+(navigator.platform||''));
+        }catch(e){}
+        const name = ($('fbName')?.value||'').trim();
+        const email = ($('fbEmail')?.value||'').trim();
+        if(name) lines.push("Reporter: "+name);
+        if(email) lines.push("Reply-to (provided): "+email);
+        return { body: lines.join("\n"), from: email||undefined, name: name||undefined };
+      }
+      async function onSubmit(e){
+        e.preventDefault();
+        const msg = ($('fbMessage')?.value||'').trim();
+        if(!msg){ (window.__toast?.makeToast||alert)('error','Missing details','Please describe the issue or idea.'); return; }
+        const data = collect();
+        try{
+          const res = await fetch(ENDPOINT, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ to: TO, subject: SUBJECT, body: data.body, from: data.from, name: data.name })
+          });
+          if(res.ok){
+            (window.__toast?.makeToast||alert)('success','Feedback sent','Thanks! We received your feedback.');
+            closeModal();
+          }else{
+            const t = await res.text();
+            (window.__toast?.makeToast||alert)('error','Feedback service not connected', t || 'Deploy to Netlify and add email provider env vars.');
+          }
+        }catch(err){
+            (window.__toast?.makeToast||alert)('error','Network error','Please check your connection and try again.');
+        }
+      }
+      window.addEventListener('DOMContentLoaded', ()=>{
+        ensureFAB();
+        $('feedbackClose')?.addEventListener('click', ()=> $('feedbackModal')?.classList.add('hidden'));
+        $('fbCancel')?.addEventListener('click', ()=> $('feedbackModal')?.classList.add('hidden'));
+        $('feedbackModal')?.addEventListener('click', (e)=>{ if(e.target===$('feedbackModal')) $('feedbackModal')?.classList.add('hidden'); });
+        $('feedbackForm')?.addEventListener('submit', onSubmit);
+      });
+    })();
+</script>
+
+  <!-- Feedback Modal -->
+  <div id="feedbackModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="feedbackTitle">Send Feedback</h3>
+        <button class="modal-close" aria-label="Close" id="feedbackClose">✕</button>
+      </div>
+      <form id="feedbackForm">
+        <div class="grid two">
+          <div>
+            <label>Category</label>
+            <select id="fbCategory" required>
+              <option value="Bug">Bug</option>
+              <option value="Design">Design</option>
+              <option value="Feature">Feature</option>
+              <option value="Question">Question</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label>Urgency</label>
+            <select id="fbUrgency">
+              <option>Low</option>
+              <option>Normal</option>
+              <option>High</option>
+              <option>Critical</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid two">
+          <div>
+            <label>Your name (optional)</label>
+            <input id="fbName" placeholder="Jane Smith" />
+          </div>
+          <div>
+            <label>Your email (optional)</label>
+            <input id="fbEmail" type="email" placeholder="you@example.com" />
+          </div>
+        </div>
+        <div>
+          <label>Subject</label>
+          <input id="fbSubject" placeholder="Short summary" required />
+        </div>
+        <div>
+          <label>Details</label>
+          <textarea id="fbMessage" rows="6" placeholder="Describe the issue or idea..." required></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn subtle" id="fbCancel">Cancel</button>
+          <button type="submit" class="btn primary">Send</button>
+        </div>
+        
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
