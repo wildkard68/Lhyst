@@ -1,5 +1,5 @@
 self.addEventListener('install', (e)=>{
-  e.waitUntil(caches.open('lhyst-cache-v24').then(cache=>cache.addAll(['./index.html','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png'
+  e.waitUntil(caches.open('lhyst-cache-v26').then(cache=>cache.addAll(['./index.html','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png'
   ,
     './assets/brand-logo.png','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png','./assets/favicon-32.png','./assets/favicon-16.png','./favicon.ico',
     './assets/icon-192.upperleft.v1.png',
