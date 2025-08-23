@@ -1,13 +1,17 @@
 // Service worker for Lhyst
 // Updated cache version to include signup.html and subscribe.html so that the new subscription pages are served offline. Bump cache version to force refresh.
+// Bump the cache version whenever files change (e.g. when adding checkout.html).
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v28').then((cache) =>
+    caches.open('lhyst-cache-v29').then((cache) =>
       cache.addAll([
         './index.html',
-        // cache both signup and subscribe pages for offline use
+        // cache signup page for offline free trial signups
         './signup.html',
+        // also cache the legacy subscribe page in case old links are used
         './subscribe.html',
+        // cache the new checkout page used for payment selection
+        './checkout.html',
         './manifest.webmanifest',
         './assets/icon-192.png',
         './assets/icon-512.png',
