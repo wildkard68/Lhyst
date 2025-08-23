@@ -165,28 +165,21 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     /**
-     * When the user selects a plan, open the Netlify Identity signup modal. After
-     * successful signup we redirect to our checkout page where the user can
-     * choose monthly or yearly billing and optionally skip entering card details
-     * until the end of the trial. We store the selected plan in localStorage
-     * so that checkout.html knows which plan to preselect.
+     * When the user selects a plan, persist the choice and redirect to our
+     * registration page. The registration page will collect account details
+     * and then forward the user to the checkout page. We no longer open
+     * Netlify's default identity modal here because we provide a custom
+     * registration experience on a dedicated page.
+     *
+     * @param {string} plan The selected plan ("basic" or "pro").
      */
     function startPlan(plan) {
-      // persist selected plan for later use
+      // Save the selected plan so that registration and checkout pages can
+      // preselect the appropriate plan when calculating prices.
       localStorage.setItem('selectedPlan', plan);
-      if (window.netlifyIdentity) {
-        netlifyIdentity.open('signup');
-        function handleSignup(user) {
-          netlifyIdentity.off('signup', handleSignup);
-          // After signup, redirect to checkout page; we include the plan in the
-          // query string for clarity but also rely on localStorage.
-          window.location.href = '/checkout.html?plan=' + encodeURIComponent(plan);
-        }
-        netlifyIdentity.on('signup', handleSignup);
-      } else {
-        // if Identity is not ready, just go to checkout page (user may be logged in)
-        window.location.href = '/checkout.html?plan=' + encodeURIComponent(plan);
-      }
+      // Redirect to our custom registration form with the plan encoded in the
+      // query string. The registration page will handle sign‑ups and login.
+      window.location.href = '/register.html?plan=' + encodeURIComponent(plan);
     }
   </script>
 </body>

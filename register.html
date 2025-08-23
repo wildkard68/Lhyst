@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Account – Lhyst</title>
+  <!-- Use the same color variables as the rest of the app for a cohesive look -->
+  <style>
+    :root{
+      color-scheme: light;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --muted: #f3f4f6;
+      --line: #e5e7eb;
+      --text: #0f172a;
+      --subtle: #475569;
+      --brand: #6366F1; /* indigo-500 */
+      --brand-dark: #4338CA; /* indigo-700 */
+      --radius: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 12px 30px rgba(2,6,23,.08);
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 420px;
+      margin: 3rem auto;
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .logo img {
+      width: 42px;
+      height: 42px;
+      margin-right: .6rem;
+    }
+    .logo span {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--brand);
+    }
+    h1 {
+      margin: 0 0 1rem;
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    p.description {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--subtle);
+      text-align: center;
+      font-size: .95rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-size: .9rem;
+      margin-bottom: .25rem;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      padding: .6rem .75rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    input[type="submit"] {
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: .75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--brand);
+      color: #fff;
+      transition: background .2s ease;
+      margin-top: .5rem;
+    }
+    input[type="submit"]:hover {
+      background: var(--brand-dark);
+    }
+    .plan-badge {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding: .4rem .8rem;
+      border-radius: var(--radius-sm);
+      background: var(--muted);
+      color: var(--brand);
+      font-weight: 600;
+      display: inline-block;
+    }
+    .error {
+      color: #b91c1c;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      padding: .6rem .8rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+      font-size: .9rem;
+    }
+    .success {
+      color: #166534;
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      padding: .6rem .8rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+      font-size: .9rem;
+    }
+    .footer {
+      margin-top: auto;
+      padding: 1rem;
+      text-align: center;
+      font-size: .85rem;
+      color: var(--subtle);
+    }
+    .login-link {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: .85rem;
+    }
+    .login-link a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="brand-logo.png" alt="Lhyst logo">
+      <span>Lhyst</span>
+    </div>
+    <h1>Create Your Account</h1>
+    <!-- Plan badge will be populated via JavaScript -->
+    <div class="plan-badge" id="planBadge"></div>
+    <p class="description">Enter your details below to create a new Lhyst account. After signing up, we'll take you to checkout to set up billing for your free trial.</p>
+    <div id="message"></div>
+    <form id="registerForm">
+      <label for="email">Email</label>
+      <input type="email" id="email" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" minlength="6" required>
+      <label for="confirmPassword">Confirm Password</label>
+      <input type="password" id="confirmPassword" minlength="6" required>
+      <input type="submit" value="Create Account">
+    </form>
+    <div class="login-link">
+      Already have an account? <a href="/login.html">Log in here</a>.
+    </div>
+  </div>
+  <div class="footer">&copy; 2025 Lhyst</div>
+  <script>
+    // Determine the selected plan from the query string or localStorage
+    const params = new URLSearchParams(window.location.search);
+    const selectedPlan = params.get('plan') || localStorage.getItem('selectedPlan') || 'basic';
+    localStorage.setItem('selectedPlan', selectedPlan);
+    // Update the plan badge to reflect the current selection
+    const badge = document.getElementById('planBadge');
+    badge.textContent = selectedPlan === 'pro' ? 'Pro Plan' : 'Basic Plan';
+
+    const messageEl = document.getElementById('message');
+    function showMessage(type, text) {
+      messageEl.className = type;
+      messageEl.textContent = text;
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if (password !== confirmPassword) {
+        showMessage('error', 'Passwords do not match. Please re‑enter.');
+        return;
+      }
+      showMessage('', '');
+      try {
+        // Sign the user up via Netlify Identity API
+        const signupRes = await fetch('/.netlify/identity/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        const signupData = await signupRes.json();
+        if (!signupRes.ok) {
+          // If the user already exists, show a friendly error
+          const errMsg = signupData.msg || signupData.error_description || signupData.error || 'Failed to sign up. Please try again.';
+          showMessage('error', errMsg);
+          return;
+        }
+        // Automatically log the user in to set the auth cookie
+        const loginRes = await fetch('/.netlify/identity/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+        const loginData = await loginRes.json();
+        if (!loginRes.ok) {
+          const errMsg = loginData.msg || loginData.error_description || loginData.error || 'Account created but failed to log in. Please log in via the login page.';
+          showMessage('error', errMsg);
+          return;
+        }
+        // Success: notify user and redirect to checkout
+        showMessage('success', 'Account created successfully! Redirecting to checkout…');
+        setTimeout(() => {
+          window.location.href = '/checkout.html?plan=' + encodeURIComponent(selectedPlan);
+        }, 1500);
+      } catch (err) {
+        showMessage('error', 'An unexpected error occurred. Please try again later.');
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
