@@ -69,11 +69,6 @@
            * this case we alert them and immediately log them back out. This
            * prevents unverified accounts from bypassing the confirmation step.
            */
-          if (user && !user.confirmed_at) {
-            alert('Your email address has not been confirmed yet. Please check your inbox for the confirmation link and try again.');
-            netlifyIdentity.logout();
-            return;
-          }
           // Check if there is a pending redirect stored from registration.
           const redirectPath = localStorage.getItem('pendingRedirect');
           if (redirectPath) {
