@@ -60,38 +60,12 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: 'This email is already registered' }),
       };
     }
-    // Check for existing codes that have not expired or been used.
-    const codesRes = await fetch(
-      `${supabaseUrl}/rest/v1/email_codes?email=eq.${encodeURIComponent(
-        email
-      )}&used=eq.false`,
-      {
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-        },
-      }
-    );
-    if (!codesRes.ok) {
-      const err = await codesRes.text();
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: `Failed to query codes: ${err}` }),
-      };
-    }
-    const existingCodes = await codesRes.json();
-    const now = Date.now();
-    if (Array.isArray(existingCodes)) {
-      for (const row of existingCodes) {
-        const expiresAt = new Date(row.expires_at).getTime();
-        if (!row.used && expiresAt > now) {
-          return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'A verification code has already been sent. Please check your email or wait until it expires.' }),
-          };
-        }
-      }
-    }
+    /*
+     * We no longer enforce a cooldown period for sending verification codes.
+     * Previously we queried the `email_codes` table for existing unused codes
+     * and prevented new codes from being sent until the prior code expired.
+     * This logic has been removed so a new code is generated on every sign‑up attempt.
+     */
     // Generate a 6‑digit code.
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(now + 60 * 60 * 1000).toISOString(); // 1 hour

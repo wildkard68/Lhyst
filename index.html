@@ -553,6 +553,14 @@
         </tr></thead><tbody></tbody></table>
       </div>
     </section>
+    <!-- Placeholder shown when user is not logged in -->
+    <section id="view-placeholder" class="card" style="display:none">
+      <h2 style="margin-top:0">Welcome to Lhyst</h2>
+      <p>Streamline your food safety records with intuitive tools for temperature logging, cleaning tasks, audits, staff management and more.</p>
+      <p>Explore the features below to understand how Lhyst helps keep your operations compliant and efficient.</p>
+      <img src="features-placeholder.png" alt="Feature highlights with arrows" style="max-width:100%;margin-top:1rem;border-radius:12px;box-shadow:var(--shadow);">
+    </section>
+
   </main>
 
   <script>
@@ -565,9 +573,31 @@
     {id:'equipment', label:'Equipment'},
     {id:'staff', label:'Staff'}
   ];
+  // Determine if a user is logged in. We store a flag in localStorage
+  // once the user signs in or completes verification. When falsey,
+  // the app displays a placeholder section and sign‑up/login options
+  // instead of the full navigation tabs.
+  function isLoggedIn(){
+    return !!localStorage.getItem('lhyst_user_logged_in');
+  }
   const tabsInner = document.getElementById('tabsInner');
   function renderTabs(){
     tabsInner.innerHTML='';
+    // If user is not logged in, show simple Sign Up / Log In options instead of the tab list.
+    if(!isLoggedIn()){
+      const signupBtn = document.createElement('button');
+      signupBtn.className = 'tab';
+      signupBtn.textContent = 'Sign Up';
+      signupBtn.onclick = () => { window.location.href = '/signup.html'; };
+      const loginBtn = document.createElement('button');
+      loginBtn.className = 'tab';
+      loginBtn.textContent = 'Log In';
+      loginBtn.onclick = () => { window.location.href = '/login.html'; };
+      tabsInner.appendChild(signupBtn);
+      tabsInner.appendChild(loginBtn);
+      return;
+    }
+    // Otherwise render the full list of tabs
     TABS.forEach(t=>{
       const b=document.createElement('button'); b.className='tab'; b.textContent=t.label; b.dataset.view=t.id;
       b.onclick=()=>show(t.id);
@@ -577,6 +607,12 @@
   renderTabs();
 
   function show(id){
+    // Hide placeholder whenever navigating to an authenticated view
+    const placeholderSection = document.getElementById('view-placeholder');
+    if (placeholderSection) {
+      placeholderSection.style.display = 'none';
+      placeholderSection.classList.remove('active');
+    }
     document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
     document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
     document.getElementById('view-'+id).classList.add('active');
@@ -590,6 +626,17 @@
   const menuBtn = document.getElementById('menuBtn');
   const menu = document.getElementById('menuPopover');
   function renderMenu(){
+    // When not logged in, show Sign Up / Log In options in the mobile menu
+    if(!isLoggedIn()){
+      menu.innerHTML = `<button class="menu-item" role="menuitem" data-view="signup" tabindex="0">Sign Up</button><button class="menu-item" role="menuitem" data-view="login">Log In</button>`;
+      menu.querySelectorAll('.menu-item').forEach(btn=> btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        if(view === 'signup') window.location.href = '/signup.html';
+        else window.location.href = '/login.html';
+      }));
+      return;
+    }
+    // Otherwise render the full menu list
     menu.innerHTML = TABS.map((t,i)=>`<button class="menu-item" role="menuitem" data-view="${t.id}" ${i===0?'tabindex="0"':''}>${t.label}</button>`).join('');
     menu.querySelectorAll('.menu-item').forEach(btn=> btn.addEventListener('click', ()=> show(btn.dataset.view)));
   }
@@ -666,11 +713,47 @@
   applyTheme(getSavedTheme());
 
   // Routing via hash (optional)
-  if(location.hash.startsWith('#view-')){
-    const id = location.hash.replace('#view-','');
-    if(TABS.some(t=>t.id===id)) show(id);
+  // For unauthenticated users, always show the placeholder and do not attempt to route to internal views.
+  if(!isLoggedIn()){
+    showPlaceholder();
   } else {
-    show('dashboard');
+    if(location.hash.startsWith('#view-')){
+      const id = location.hash.replace('#view-','');
+      if(TABS.some(t=>t.id===id)) {
+        show(id);
+      } else {
+        show('dashboard');
+      }
+    } else {
+      show('dashboard');
+    }
+  }
+
+  // Replace the inline base64 logo with an external PNG at runtime. This ensures the logo updates when the
+  // theme or assets change without editing the HTML markup. It also allows us to swap in a new logo file
+  // (brand-logo.png) without modifying the inline base64 content from the original template.
+  document.addEventListener('DOMContentLoaded', () => {
+    const brandImg = document.querySelector('.brand img');
+    if (brandImg) {
+      brandImg.src = 'brand-logo.png';
+      brandImg.alt = 'Lhyst logo';
+    }
+  });
+
+  // Show the placeholder view for unauthenticated users. This function hides all other sections and
+  // displays the explanatory placeholder with feature descriptions and screenshots. It also ensures the
+  // placeholder is visible when the page first loads if the user is not logged in.
+  function showPlaceholder(){
+    // Hide all other sections
+    document.querySelectorAll('main section').forEach(s => s.classList.remove('active'));
+    const placeholder = document.getElementById('view-placeholder');
+    if (placeholder) {
+      placeholder.style.display = 'block';
+      placeholder.classList.add('active');
+    }
+    // Highlight no tabs in the menu
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    highlightMenu('');
   }
 
   // ====== IndexedDB + helpers (same as previous) ======

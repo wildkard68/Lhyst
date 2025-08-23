@@ -149,7 +149,9 @@
           }
           return;
         }
-        // Successful login: start trial if not already started
+        // Successful login: mark the user as logged in and start trial if not already started
+        localStorage.setItem('lhyst_user_logged_in', 'true');
+        // Start the trial timestamp if not already recorded
         if (!localStorage.getItem('trialStart')) {
           localStorage.setItem('trialStart', new Date().toISOString());
         }

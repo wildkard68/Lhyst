@@ -198,7 +198,10 @@
           showMessage('error', `${loginError.message || 'Unable to sign in.'} (Code: E-V2)`);
           return;
         }
-        // Clean up stored credentials
+            // Mark the user as logged in. Once verified, the account is active and the
+            // main application should display all logged‑in features.
+            localStorage.setItem('lhyst_user_logged_in', 'true');
+            // Clean up stored credentials
         localStorage.removeItem('pendingPassword');
         localStorage.removeItem('pendingEmail');
         // Redirect to checkout to finalize subscription

@@ -201,18 +201,11 @@
         showMessage('error', 'Passwords do not match. Please re‑enter. (Code: E-R1)');
         return;
       }
-      // Prevent duplicate sign‑ups for the same email within a 24‑hour window.
-      const lastEmail = localStorage.getItem('lastSignupEmail');
-      const lastTime = localStorage.getItem('lastSignupTime');
-      if (lastEmail && lastEmail === email && lastTime) {
-        const elapsed = Date.now() - parseInt(lastTime, 10);
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        if (elapsed < twentyFourHours) {
-          // E-R2: Duplicate signup attempt within cooldown period
-          showMessage('error', 'A verification code has already been sent to this email. Please check your inbox or wait 24 hours. (Code: E-R2)');
-          return;
-        }
-      }
+      // We no longer enforce a 24‑hour cooldown on repeated sign‑ups.
+      // Previously, we checked localStorage for the last email and timestamp
+      // to prevent sending multiple verification codes within a day. That
+      // logic has been removed. The server will now simply report an error
+      // if the email is already registered.
       // Clear any existing messages
       showMessage('', '');
       try {
@@ -228,15 +221,11 @@
           data = JSON.parse(raw);
         } catch (parseErr) {
           // E-R6: Unexpected server response (non‑JSON)
-          localStorage.setItem('lastSignupEmail', email);
-          localStorage.setItem('lastSignupTime', Date.now().toString());
           showMessage('error', 'Unexpected response from server while requesting verification code. (Code: E-R6)');
           return;
         }
         if (!res.ok) {
-          // E-R3: Server returned an error (email exists, code already sent, etc.)
-          localStorage.setItem('lastSignupEmail', email);
-          localStorage.setItem('lastSignupTime', Date.now().toString());
+          // E-R3: Server returned an error (e.g. email already registered)
           const errMsg = data.error || data.message || 'Unable to send verification code. Please try again later.';
           showMessage('error', `${errMsg} (Code: E-R3)`);
           return;
@@ -249,9 +238,7 @@
         // Store email, password and plan locally for verification step
         localStorage.setItem('pendingEmail', email);
         localStorage.setItem('pendingPassword', password);
-        // Record sign‑up attempt for cooldown enforcement
-        localStorage.setItem('lastSignupEmail', email);
-        localStorage.setItem('lastSignupTime', Date.now().toString());
+        // We no longer record the email and timestamp for cooldown purposes.
         // E-R5: Successful code sent
         showMessage('success', 'Verification code sent! Please check your email and enter the code on the next page. (Code: E-R5)');
         setTimeout(() => {

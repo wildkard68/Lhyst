@@ -1,14 +1,13 @@
 // Service worker for Lhyst
-// Updated cache version to v38 to include the switch to using the /token endpoint for login and improved error handling.
-// Bump cache version to v39 for new verification flow and Supabase auth changes.
+// Updated cache version to v40 to include new placeholder view, dynamic branding updates, and removal of cooldown logic.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v39').then((cache) =>
+    caches.open('lhyst-cache-v40').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups
         './signup.html',
-        // also cache the legacy subscribe page in case old links are used
+        // legacy subscribe page (deprecated but cached for compatibility)
         './subscribe.html',
         // cache the new checkout page used for payment selection
         './checkout.html',
@@ -16,24 +15,21 @@ self.addEventListener('install', (e) => {
         './register.html',
         // cache the custom login page
         './login.html',
+        // cache the verification page
         './verify.html',
+        // cache the placeholder for offline access
+        './features-placeholder.png',
+        // static assets
         './manifest.webmanifest',
         './assets/icon-192.png',
         './assets/icon-512.png',
-        './assets/brand-logo.png',
-        './assets/icon-192.png',
-        './assets/icon-512.png',
-        './assets/apple-touch-icon.png',
-        './assets/favicon-32.png',
-        './assets/favicon-16.png',
-        './favicon.ico',
         './assets/icon-192.upperleft.v1.png',
         './assets/icon-512.upperleft.v1.png',
         './assets/apple-touch-icon.upperleft.v1.png',
         './assets/favicon-32.upperleft.v1.png',
         './assets/favicon-16.upperleft.v1.png',
         './favicon.upperleft.v1.ico',
-        './assets/brand-logo.upperleft.v2.png',
+        './brand-logo.png'
       ])
     )
   );
