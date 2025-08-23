@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify Account – Lhyst</title>
+  <!-- Include Supabase JS for client‑side login after verification -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --muted: #f3f4f6;
+      --line: #e5e7eb;
+      --text: #0f172a;
+      --subtle: #475569;
+      --brand: #6366F1;
+      --brand-dark: #4338CA;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 12px 30px rgba(2,6,23,.08);
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 420px;
+      margin: 3rem auto;
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .logo img {
+      width: 42px;
+      height: 42px;
+      margin-right: .6rem;
+    }
+    .logo span {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--brand);
+    }
+    h1 {
+      margin: 0 0 1rem;
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    p.description {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--subtle);
+      text-align: center;
+      font-size: .95rem;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-size: .9rem;
+      margin-bottom: .25rem;
+    }
+    input[type="text"] {
+      padding: .6rem .75rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    input[type="submit"] {
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: .75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--brand);
+      color: #fff;
+      transition: background .2s ease;
+      margin-top: .5rem;
+    }
+    input[type="submit"]:hover {
+      background: var(--brand-dark);
+    }
+    .message {
+      margin-bottom: 1rem;
+      padding: .6rem .8rem;
+      border-radius: var(--radius-sm);
+      font-size: .9rem;
+    }
+    .message.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .message.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .footer {
+      margin-top: auto;
+      padding: 1rem;
+      text-align: center;
+      font-size: .85rem;
+      color: var(--subtle);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="brand-logo.png" alt="Lhyst logo">
+      <span>Lhyst</span>
+    </div>
+    <h1>Verify Your Email</h1>
+    <p class="description">We just sent a verification code to your email. Enter it below to activate your account. The code expires in 1 hour.</p>
+    <div id="message" class="message" style="display:none;"></div>
+    <form id="verifyForm">
+      <label for="code">Verification Code</label>
+      <input type="text" id="code" maxlength="6" required placeholder="Enter 6‑digit code">
+      <input type="submit" value="Verify and Continue">
+    </form>
+  </div>
+  <div class="footer">&copy; 2025 Lhyst</div>
+  <script>
+    // Configure Supabase
+    const SUPABASE_URL = 'https://osphksuqaleyeiuthivu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zcGhrc3VxYWxleWVpdXRoaXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5ODExNTUsImV4cCI6MjA3MTU1NzE1NX0.WHA35rvF1xCLFGBJehh32itaokL37Lu2o9SLSRZlYFc';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    function showMessage(type, text) {
+      const el = document.getElementById('message');
+      if (!type) {
+        el.style.display = 'none';
+        el.textContent = '';
+        el.className = 'message';
+        return;
+      }
+      el.style.display = 'block';
+      el.className = 'message ' + type;
+      el.textContent = text;
+    }
+    document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const code = document.getElementById('code').value.trim();
+      const email = localStorage.getItem('pendingEmail');
+      const password = localStorage.getItem('pendingPassword');
+      const plan = localStorage.getItem('selectedPlan') || 'basic';
+      if (!email || !password) {
+        // E-V3: Missing stored credentials
+        showMessage('error', 'Registration information missing. Please restart the sign‑up process. (Code: E-V3)');
+        return;
+      }
+      showMessage('', '');
+      try {
+        const res = await fetch('/.netlify/functions/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code, password, plan })
+        });
+        const raw = await res.text();
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (parseErr) {
+          // E-V4: Non‑JSON response
+          showMessage('error', 'Unexpected response from server while verifying your code. (Code: E-V4)');
+          return;
+        }
+        if (!res.ok) {
+          // E-V1: Verification failed
+          const errMsg = data.error || data.message || 'Invalid verification code.';
+          showMessage('error', `${errMsg} (Code: E-V1)`);
+          return;
+        }
+        // Verification succeeded. Now log the user in via Supabase to establish a session.
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          // E-V2: Login failed after verification
+          showMessage('error', `${loginError.message || 'Unable to sign in.'} (Code: E-V2)`);
+          return;
+        }
+        // Clean up stored credentials
+        localStorage.removeItem('pendingPassword');
+        localStorage.removeItem('pendingEmail');
+        // Redirect to checkout to finalize subscription
+        window.location.href = `/checkout.html?plan=${encodeURIComponent(plan)}`;
+      } catch (err) {
+        console.error(err);
+        // E-V4: Unexpected network or processing error
+        showMessage('error', 'An unexpected error occurred. Please try again later. (Code: E-V4)');
+      }
+    });
+  </script>
+</body>
+</html>

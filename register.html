@@ -159,7 +159,7 @@
     <h1>Create Your Account</h1>
     <!-- Plan badge will be populated via JavaScript -->
     <div class="plan-badge" id="planBadge"></div>
-    <p class="description">Enter your details below to create a new Lhyst account. After signing up, we'll take you to checkout to set up billing for your free trial.</p>
+    <p class="description">Enter your details below to create a new Lhyst account. We'll send a one‑time verification code to your email. Once you enter the code, your account will be activated and we'll take you to checkout to set up billing for your free trial.</p>
     <div id="message"></div>
         <!-- Sign‑up form for creating a new account -->
         <form id="registerForm">
@@ -193,17 +193,15 @@
 
     document.getElementById('registerForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
-      // If passwords don't match, bail out early
+      // E-R1: Password mismatch
       if (password !== confirmPassword) {
-        // E-R1: Password mismatch
         showMessage('error', 'Passwords do not match. Please re‑enter. (Code: E-R1)');
         return;
       }
       // Prevent duplicate sign‑ups for the same email within a 24‑hour window.
-      // We use localStorage to remember the last signup attempt and timestamp.
       const lastEmail = localStorage.getItem('lastSignupEmail');
       const lastTime = localStorage.getItem('lastSignupTime');
       if (lastEmail && lastEmail === email && lastTime) {
@@ -211,61 +209,58 @@
         const twentyFourHours = 24 * 60 * 60 * 1000;
         if (elapsed < twentyFourHours) {
           // E-R2: Duplicate signup attempt within cooldown period
-          showMessage('error', 'A confirmation email for this account has already been sent. Please check your inbox or wait 24 hours before trying again. (Code: E-R2)');
+          showMessage('error', 'A verification code has already been sent to this email. Please check your inbox or wait 24 hours. (Code: E-R2)');
           return;
         }
       }
       // Clear any existing messages
       showMessage('', '');
       try {
-        // Attempt to sign the user up via Netlify Identity API
-        const signupRes = await fetch('/.netlify/identity/signup', {
+        // Call our serverless function to generate and send the verification code
+        const res = await fetch('/.netlify/functions/generate-code', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email, password })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
         });
-            let signupData;
-            // Attempt to parse JSON safely; if parsing fails, treat as unexpected server response
-            const rawText = await signupRes.text();
-            try {
-              signupData = JSON.parse(rawText);
-            } catch (parseErr) {
-              // Record attempt and show parse error code E-R6
-              localStorage.setItem('lastSignupEmail', email);
-              localStorage.setItem('lastSignupTime', Date.now().toString());
-              showMessage('error', 'Unexpected response from server while signing up. (Code: E-R6)');
-              return;
-            }
-            if (!signupRes.ok) {
-              // If the email is already registered or another error occurred, record the
-              // attempt locally to prevent immediate re‑submissions and surface the
-              // server‑returned error message. This helps enforce a 24‑hour window.
-              localStorage.setItem('lastSignupEmail', email);
-              localStorage.setItem('lastSignupTime', Date.now().toString());
-              const errMsg = signupData.msg || signupData.error_description || signupData.error || 'Failed to sign up. Please try again.';
-              // E-R3: Server returned an error
-              showMessage('error', `${errMsg} (Code: E-R3)`);
-              return;
-            }
-        // Persist the selected plan and start the free trial locally so the app remembers the subscription choice
+        const raw = await res.text();
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (parseErr) {
+          // E-R6: Unexpected server response (non‑JSON)
+          localStorage.setItem('lastSignupEmail', email);
+          localStorage.setItem('lastSignupTime', Date.now().toString());
+          showMessage('error', 'Unexpected response from server while requesting verification code. (Code: E-R6)');
+          return;
+        }
+        if (!res.ok) {
+          // E-R3: Server returned an error (email exists, code already sent, etc.)
+          localStorage.setItem('lastSignupEmail', email);
+          localStorage.setItem('lastSignupTime', Date.now().toString());
+          const errMsg = data.error || data.message || 'Unable to send verification code. Please try again later.';
+          showMessage('error', `${errMsg} (Code: E-R3)`);
+          return;
+        }
+        // Persist selected plan and trial start locally
         localStorage.setItem('selectedPlan', selectedPlan);
-        localStorage.setItem('trialStart', new Date().toISOString());
-        // Store the sign‑up email and timestamp to prevent repeat sign‑ups until the confirmation expires
+        if (!localStorage.getItem('trialStart')) {
+          localStorage.setItem('trialStart', new Date().toISOString());
+        }
+        // Store email, password and plan locally for verification step
+        localStorage.setItem('pendingEmail', email);
+        localStorage.setItem('pendingPassword', password);
+        // Record sign‑up attempt for cooldown enforcement
         localStorage.setItem('lastSignupEmail', email);
-        localStorage.setItem('lastSignupTime', new Date().toISOString());
-            // Inform the user to confirm their email. Do not log them in automatically.
-            // E-R5: Successful signup
-            showMessage('success', 'Account created! Please check your email and click the confirmation link. After confirming, return to the login page and sign in to continue. (Code: E-R5)');
-        // Redirect to the login page after a short delay
+        localStorage.setItem('lastSignupTime', Date.now().toString());
+        // E-R5: Successful code sent
+        showMessage('success', 'Verification code sent! Please check your email and enter the code on the next page. (Code: E-R5)');
         setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 5000);
+          window.location.href = '/verify.html';
+        }, 4000);
       } catch (err) {
-            console.error(err);
-            // E-R4: Unexpected network or processing error
-            showMessage('error', 'An unexpected error occurred. Please try again later. (Code: E-R4)');
+        console.error(err);
+        // E-R4: Unexpected network or processing error
+        showMessage('error', 'An unexpected error occurred. Please try again later. (Code: E-R4)');
       }
     });
   </script>

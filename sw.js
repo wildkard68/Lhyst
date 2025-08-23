@@ -1,8 +1,9 @@
 // Service worker for Lhyst
 // Updated cache version to v38 to include the switch to using the /token endpoint for login and improved error handling.
+// Bump cache version to v39 for new verification flow and Supabase auth changes.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v38').then((cache) =>
+    caches.open('lhyst-cache-v39').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups
@@ -15,6 +16,7 @@ self.addEventListener('install', (e) => {
         './register.html',
         // cache the custom login page
         './login.html',
+        './verify.html',
         './manifest.webmanifest',
         './assets/icon-192.png',
         './assets/icon-512.png',

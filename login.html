@@ -104,7 +104,14 @@
       Don’t have an account? <a href="/signup.html">Sign up</a>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // Configure Supabase. These values are safe to expose on the client because
+    // they grant only anonymous access. The secret service role key is kept
+    // server‑side in Netlify functions.
+    const SUPABASE_URL = 'https://osphksuqaleyeiuthivu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zcGhrc3VxYWxleWVpdXRoaXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5ODExNTUsImV4cCI6MjA3MTU1NzE1NX0.WHA35rvF1xCLFGBJehh32itaokL37Lu2o9SLSRZlYFc';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // Display an error or success message
     function showMessage(type, text) {
       const msgEl = document.getElementById('message');
@@ -120,75 +127,33 @@
     }
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
       showMessage('', '');
       try {
-        // Use the OAuth2 password grant to log in via the GoTrue /token endpoint.
-        // The /login endpoint sometimes returns HTML or non‑JSON responses, causing
-        // parsing errors. Using /token with grant_type=password is the recommended way
-        // to programmatically log in to Netlify Identity. See
-        // https://answers.netlify.com/t/possible-to-login-with-gotrue-identity-via-serverless-function/36028
-        const res = await fetch('/.netlify/identity/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
-        });
-        let data;
-        // Read the raw response text. We read the body once up front so we can
-        // reuse it whether it's JSON or plain text. Some Netlify Identity
-        // endpoints return HTML or plain text when there's an error, and will
-        // incorrectly set the Content‑Type header to application/json. Trying to
-        // parse such responses as JSON will throw. We therefore attempt to
-        // parse JSON but gracefully fall back to using the raw text as the
-        // server‑provided error message instead of showing a parsing error.
-        const rawText = await res.text();
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          try {
-            data = JSON.parse(rawText);
-          } catch (parseErr) {
-            // The server claimed JSON but returned something else (often HTML). Instead of
-            // showing a JSON parse error (E-L6), treat the raw text as the error message. We
-            // use error code E-L7 to indicate a non‑JSON response.
-            const trimmed = rawText.trim();
-            const errMsg = trimmed || 'Unexpected server response.';
-            showMessage('error', `${errMsg} (Code: E-L7)`);
-            return;
-          }
-        } else {
-          // Response is not JSON – treat the body as an error message.
-          const trimmed = rawText.trim();
-          const errMsg = trimmed || 'Unexpected server response.';
-          showMessage('error', `${errMsg} (Code: E-L7)`);
-          return;
-        }
-        if (!res.ok) {
-          // Consolidate error messages returned from the Identity API. If the
-          // email isn't confirmed yet, prompt the user to check their inbox; otherwise
-          // display the server‑provided error.
-          const rawMsg = (data.msg || data.error_description || data.error || '').toLowerCase();
-          if (rawMsg.includes('email not confirmed')) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes('email not confirmed')) {
             // E-L1: Email not confirmed
             showMessage('error', 'Please confirm your email before logging in. (Code: E-L1)');
-          } else if (rawMsg.includes('user not found')) {
-            // E-L2: User not found
-            showMessage('error', 'No account found with this email. Please sign up first. (Code: E-L2)');
-          } else if (rawMsg.includes('invalid') && rawMsg.includes('password')) {
+          } else if (msg.includes('invalid login credentials') || msg.includes('invalid login')) {
             // E-L3: Invalid credentials
             showMessage('error', 'Incorrect email or password. (Code: E-L3)');
+          } else if (msg.includes('user not found')) {
+            // E-L2: User not found
+            showMessage('error', 'No account found with this email. Please sign up first. (Code: E-L2)');
           } else {
             // E-L4: Other server error
-            const errMsg = data.msg || data.error_description || data.error || 'Login failed.';
-            showMessage('error', `${errMsg} (Code: E-L4)`);
+            showMessage('error', `${error.message} (Code: E-L4)`);
           }
           return;
         }
-        // Start trial if not already started
+        // Successful login: start trial if not already started
         if (!localStorage.getItem('trialStart')) {
           localStorage.setItem('trialStart', new Date().toISOString());
         }
-        // Redirect to pending location (e.g. checkout) if available
+        // Redirect to any pending location (e.g. checkout)
         const redirectPath = localStorage.getItem('pendingRedirect');
         if (redirectPath) {
           localStorage.removeItem('pendingRedirect');
