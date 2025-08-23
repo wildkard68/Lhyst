@@ -1,8 +1,8 @@
 // Service worker for Lhyst
-// Updated cache version to include signup.html, subscribe.html and register.html. Bump cache version to force refresh whenever files change (e.g. adding new pages like checkout.html or register.html).
+// Updated cache version to v34 to include latest changes to register and login pages. Bump cache version to force refresh whenever files change.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v33').then((cache) =>
+    caches.open('lhyst-cache-v34').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups

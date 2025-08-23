@@ -131,9 +131,16 @@
         });
         const data = await res.json();
         if (!res.ok) {
-          const err = (data.msg || data.error_description || data.error || '').toLowerCase();
-          if (err.includes('email not confirmed')) {
+          // Consolidate error messages returned from the Identity API. If the
+          // email isn't confirmed yet, prompt the user to check their inbox; otherwise
+          // display the server‑provided error.
+          const rawMsg = (data.msg || data.error_description || data.error || '').toLowerCase();
+          if (rawMsg.includes('email not confirmed')) {
             showMessage('error', 'Please confirm your email before logging in.');
+          } else if (rawMsg.includes('user not found')) {
+            showMessage('error', 'No account found with this email. Please sign up first.');
+          } else if (rawMsg.includes('invalid email or password')) {
+            showMessage('error', 'Incorrect email or password.');
           } else {
             showMessage('error', data.msg || data.error_description || data.error || 'Login failed.');
           }
@@ -153,7 +160,8 @@
         }
       } catch (err) {
         console.error(err);
-        showMessage('error', 'An unexpected error occurred. Please try again later.');
+        // Provide a more descriptive error message on network or unexpected errors
+        showMessage('error', err && err.message ? err.message : 'An unexpected error occurred. Please try again later.');
       }
     });
   </script>
