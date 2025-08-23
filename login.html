@@ -124,10 +124,15 @@
       const password = document.getElementById('password').value;
       showMessage('', '');
       try {
-        const res = await fetch('/.netlify/identity/login', {
+        // Use the OAuth2 password grant to log in via the GoTrue /token endpoint.
+        // The /login endpoint sometimes returns HTML or non‑JSON responses, causing
+        // parsing errors. Using /token with grant_type=password is the recommended way
+        // to programmatically log in to Netlify Identity. See
+        // https://answers.netlify.com/t/possible-to-login-with-gotrue-identity-via-serverless-function/36028
+        const res = await fetch('/.netlify/identity/token', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `grant_type=password&username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
         });
         let data;
         // Read the raw response text. We read the body once up front so we can

@@ -1,8 +1,8 @@
 // Service worker for Lhyst
-// Updated cache version to v37 to include latest changes to register and login pages and improved error handling. Bump cache version to force refresh whenever files change.
+// Updated cache version to v38 to include the switch to using the /token endpoint for login and improved error handling.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v37').then((cache) =>
+    caches.open('lhyst-cache-v38').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups
