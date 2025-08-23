@@ -1702,8 +1702,9 @@
     <h2>Welcome to Lhyst</h2>
     <p>You must create an account to access the app features.</p>
     <div style="margin-top:1rem;">
-      <button class="btn primary" onclick="openSignup()">Sign&nbsp;Up</button>
-      <button class="btn" onclick="openLogin()">Log&nbsp;In</button>
+      <!-- Redirect to dedicated signup and login pages instead of opening the modal directly -->
+      <button class="btn primary" onclick="window.location.href='signup.html'">Sign&nbsp;Up</button>
+      <button class="btn" onclick="window.location.href='login.html'">Log&nbsp;In</button>
     </div>
   </div>
 
