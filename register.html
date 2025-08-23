@@ -198,7 +198,8 @@
       const confirmPassword = document.getElementById('confirmPassword').value;
       // If passwords don't match, bail out early
       if (password !== confirmPassword) {
-        showMessage('error', 'Passwords do not match. Please re‑enter.');
+        // E-R1: Password mismatch
+        showMessage('error', 'Passwords do not match. Please re‑enter. (Code: E-R1)');
         return;
       }
       // Prevent duplicate sign‑ups for the same email within a 24‑hour window.
@@ -209,7 +210,8 @@
         const elapsed = Date.now() - parseInt(lastTime, 10);
         const twentyFourHours = 24 * 60 * 60 * 1000;
         if (elapsed < twentyFourHours) {
-          showMessage('error', 'A confirmation email for this account has already been sent. Please check your inbox or wait 24 hours before trying again.');
+          // E-R2: Duplicate signup attempt within cooldown period
+          showMessage('error', 'A confirmation email for this account has already been sent. Please check your inbox or wait 24 hours before trying again. (Code: E-R2)');
           return;
         }
       }
@@ -224,32 +226,46 @@
           },
           body: JSON.stringify({ email, password })
         });
-        const signupData = await signupRes.json();
-        if (!signupRes.ok) {
-          // If the email is already registered or another error occurred, record the
-          // attempt locally to prevent immediate re‑submissions and surface the
-          // server‑returned error message. This helps enforce a 24‑hour window.
-          localStorage.setItem('lastSignupEmail', email);
-          localStorage.setItem('lastSignupTime', Date.now().toString());
-          const errMsg = signupData.msg || signupData.error_description || signupData.error || 'Failed to sign up. Please try again.';
-          showMessage('error', errMsg);
-          return;
-        }
+            let signupData;
+            // Attempt to parse JSON safely; if parsing fails, treat as unexpected server response
+            const rawText = await signupRes.text();
+            try {
+              signupData = JSON.parse(rawText);
+            } catch (parseErr) {
+              // Record attempt and show parse error code E-R6
+              localStorage.setItem('lastSignupEmail', email);
+              localStorage.setItem('lastSignupTime', Date.now().toString());
+              showMessage('error', 'Unexpected response from server while signing up. (Code: E-R6)');
+              return;
+            }
+            if (!signupRes.ok) {
+              // If the email is already registered or another error occurred, record the
+              // attempt locally to prevent immediate re‑submissions and surface the
+              // server‑returned error message. This helps enforce a 24‑hour window.
+              localStorage.setItem('lastSignupEmail', email);
+              localStorage.setItem('lastSignupTime', Date.now().toString());
+              const errMsg = signupData.msg || signupData.error_description || signupData.error || 'Failed to sign up. Please try again.';
+              // E-R3: Server returned an error
+              showMessage('error', `${errMsg} (Code: E-R3)`);
+              return;
+            }
         // Persist the selected plan and start the free trial locally so the app remembers the subscription choice
         localStorage.setItem('selectedPlan', selectedPlan);
         localStorage.setItem('trialStart', new Date().toISOString());
         // Store the sign‑up email and timestamp to prevent repeat sign‑ups until the confirmation expires
         localStorage.setItem('lastSignupEmail', email);
         localStorage.setItem('lastSignupTime', new Date().toISOString());
-        // Inform the user to confirm their email. Do not log them in automatically.
-        showMessage('success', 'Account created! Please check your email and click the confirmation link. After confirming, return to the login page and sign in to continue.');
+            // Inform the user to confirm their email. Do not log them in automatically.
+            // E-R5: Successful signup
+            showMessage('success', 'Account created! Please check your email and click the confirmation link. After confirming, return to the login page and sign in to continue. (Code: E-R5)');
         // Redirect to the login page after a short delay
         setTimeout(() => {
           window.location.href = '/login.html';
         }, 5000);
       } catch (err) {
-        console.error(err);
-        showMessage('error', 'An unexpected error occurred. Please try again later.');
+            console.error(err);
+            // E-R4: Unexpected network or processing error
+            showMessage('error', 'An unexpected error occurred. Please try again later. (Code: E-R4)');
       }
     });
   </script>

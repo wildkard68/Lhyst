@@ -129,20 +129,34 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
+        let data;
+        // Safely parse the response as JSON. If parsing fails, show a parse error.
+        const rawText = await res.text();
+        try {
+          data = JSON.parse(rawText);
+        } catch (parseErr) {
+          // E-L6: JSON parsing error
+          showMessage('error', 'Unexpected response from server while logging in. (Code: E-L6)');
+          return;
+        }
         if (!res.ok) {
           // Consolidate error messages returned from the Identity API. If the
           // email isn't confirmed yet, prompt the user to check their inbox; otherwise
           // display the server‑provided error.
           const rawMsg = (data.msg || data.error_description || data.error || '').toLowerCase();
           if (rawMsg.includes('email not confirmed')) {
-            showMessage('error', 'Please confirm your email before logging in.');
+            // E-L1: Email not confirmed
+            showMessage('error', 'Please confirm your email before logging in. (Code: E-L1)');
           } else if (rawMsg.includes('user not found')) {
-            showMessage('error', 'No account found with this email. Please sign up first.');
-          } else if (rawMsg.includes('invalid email or password')) {
-            showMessage('error', 'Incorrect email or password.');
+            // E-L2: User not found
+            showMessage('error', 'No account found with this email. Please sign up first. (Code: E-L2)');
+          } else if (rawMsg.includes('invalid') && rawMsg.includes('password')) {
+            // E-L3: Invalid credentials
+            showMessage('error', 'Incorrect email or password. (Code: E-L3)');
           } else {
-            showMessage('error', data.msg || data.error_description || data.error || 'Login failed.');
+            // E-L4: Other server error
+            const errMsg = data.msg || data.error_description || data.error || 'Login failed.';
+            showMessage('error', `${errMsg} (Code: E-L4)`);
           }
           return;
         }
@@ -160,8 +174,9 @@
         }
       } catch (err) {
         console.error(err);
-        // Provide a more descriptive error message on network or unexpected errors
-        showMessage('error', err && err.message ? err.message : 'An unexpected error occurred. Please try again later.');
+        // E-L5: Network or unexpected error
+        const msg = err && err.message ? err.message : 'An unexpected error occurred. Please try again later.';
+        showMessage('error', `${msg} (Code: E-L5)`);
       }
     });
   </script>
