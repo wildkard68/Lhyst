@@ -30,33 +30,41 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
     }
 
-    const plan = body.plan === 'yearly' ? 'yearly' : 'monthly';
+    /*
+     * Determine the subscription pricing based on the selected plan and billing
+     * frequency. The client should provide two properties:
+     *   - plan: "basic" or "pro"
+     *   - frequency: "monthly" or "yearly"
+     *
+     * Basic plans cost $9.99 per month. Pro plans cost 1.5× the Basic price.
+     * Yearly billing applies a 10% discount to the equivalent annual total.
+     */
+    const selectedPlan = body.plan === 'pro' ? 'pro' : 'basic';
+    const frequency = body.frequency === 'yearly' ? 'yearly' : 'monthly';
 
-    // Determine the recurring interval and amount (in cents). The yearly plan
-    // applies a $1 discount per month (i.e. $8.99/month when billed yearly).
+    // Set the base monthly price in dollars for the selected plan
+    const baseMonthlyPrice = selectedPlan === 'pro' ? 9.99 * 1.5 : 9.99;
+
     let interval = 'month';
-    let amount = 999; // $9.99 in cents
-    if (plan === 'yearly') {
+    let amountInCents;
+    if (frequency === 'yearly') {
       interval = 'year';
-      // 12 months * $8.99 = $107.88; convert dollars to cents
-      amount = Math.round(8.99 * 12 * 100);
+      const yearlyTotal = baseMonthlyPrice * 12 * 0.9; // 10% discount on yearly total
+      amountInCents = Math.round(yearlyTotal * 100);
+    } else {
+      amountInCents = Math.round(baseMonthlyPrice * 100);
     }
 
     // Build form data for the Stripe Checkout session request
     const params = new URLSearchParams();
-    // Accept card payments
     params.append('payment_method_types[]', 'card');
-    // Define the line item and price data
     params.append('line_items[0][price_data][currency]', 'usd');
-    params.append('line_items[0][price_data][product_data][name]', 'Lhyst Subscription');
+    params.append('line_items[0][price_data][product_data][name]', `Lhyst Subscription – ${selectedPlan === 'pro' ? 'Pro' : 'Basic'}`);
     params.append('line_items[0][price_data][recurring][interval]', interval);
-    params.append('line_items[0][price_data][unit_amount]', amount.toString());
+    params.append('line_items[0][price_data][unit_amount]', amountInCents.toString());
     params.append('line_items[0][quantity]', '1');
-    // Subscription mode to create a recurring subscription
     params.append('mode', 'subscription');
-    // Configure a 14‑day trial period
     params.append('subscription_data[trial_period_days]', '14');
-    // Success and cancel URLs – include the session ID token in the success URL
     params.append('success_url', 'https://lhystlog.com/#/success?session_id={CHECKOUT_SESSION_ID}');
     params.append('cancel_url', 'https://lhystlog.com/#/cancel');
 
@@ -72,11 +80,9 @@ exports.handler = async (event) => {
 
     const data = await response.json();
     if (!response.ok) {
-      // Pass through any error from Stripe
       return { statusCode: response.status, body: JSON.stringify(data) };
     }
 
-    // Return the Checkout session URL
     return {
       statusCode: 200,
       body: JSON.stringify({ url: data.url, id: data.id })
