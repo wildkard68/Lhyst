@@ -1697,5 +1697,147 @@
     </div>
   </div>
 
+  <!-- Signup/Trial gating overlay -->
+  <div id="signup-overlay" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+    <h2>Welcome to Lhyst</h2>
+    <p>You must create an account to access the app features.</p>
+    <div style="margin-top:1rem;">
+      <button class="btn primary" onclick="openSignup()">Sign&nbsp;Up</button>
+      <button class="btn" onclick="openLogin()">Log&nbsp;In</button>
+    </div>
+  </div>
+
+  <!-- Terms of Service Modal -->
+  <div id="tos-modal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); color:#fff; overflow-y:auto;">
+    <div style="max-width:600px; margin:5% auto; background:#1e1e1e; padding:2rem; border-radius:8px;">
+      <h2>Terms of Service Updated</h2>
+      <p>Our terms of service have changed. Please read and accept the latest version to continue using Lhyst.</p>
+      <p>By clicking "Accept", you agree to the updated terms and acknowledge any changes in pricing and rules.</p>
+      <div style="text-align:right; margin-top:1rem;">
+        <button class="btn primary" onclick="acceptTOS()">Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Required Modal -->
+  <div id="payment-modal" style="display:none; position:fixed; z-index:9999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); color:#fff;">
+    <div style="max-width:600px; margin:5% auto; background:#1e1e1e; padding:2rem; border-radius:8px;">
+      <h2>Trial Ending Soon</h2>
+      <p>Your 14‑day trial is almost over. To continue using Lhyst, please choose a subscription plan and enter your payment details.</p>
+      <div style="margin-top:1rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button class="btn primary" onclick="subscribe('monthly')">Subscribe Monthly ($9.99/mo)</button>
+        <button class="btn primary" onclick="subscribe('yearly')">Subscribe Yearly ($8.99/mo, billed annually)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include Netlify Identity widget -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <script>
+    (function() {
+      const TOS_VERSION = 1; // increment this whenever terms or pricing change
+
+      function daysBetween(d1, d2) {
+        return Math.floor((d2 - d1) / (24*60*60*1000));
+      }
+
+      // Expose functions to global scope for buttons
+      window.openSignup = function() {
+        if (window.netlifyIdentity) netlifyIdentity.open('signup');
+      }
+      window.openLogin = function() {
+        if (window.netlifyIdentity) netlifyIdentity.open('login');
+      }
+      window.acceptTOS = function() {
+        localStorage.setItem('tosAccepted', TOS_VERSION.toString());
+        document.getElementById('tos-modal').style.display = 'none';
+        checkTrial();
+      }
+      window.subscribe = async function(plan) {
+        try {
+          const res = await fetch('/.netlify/functions/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan })
+          });
+          const data = await res.json();
+          if (data.url) {
+            // store that payment has been initiated; actual payment completion will update Stripe
+            localStorage.setItem('paymentPending', 'true');
+            window.location.href = data.url;
+          } else {
+            alert(data.error || 'Unable to start subscription');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error starting subscription');
+        }
+      }
+
+      function checkTOS() {
+        const accepted = parseInt(localStorage.getItem('tosAccepted') || '0', 10);
+        if (accepted < TOS_VERSION) {
+          document.getElementById('tos-modal').style.display = 'block';
+          return false;
+        }
+        return true;
+      }
+
+      function checkTrial() {
+        const trialStartStr = localStorage.getItem('trialStart');
+        const payment = localStorage.getItem('paymentGiven');
+        if (!trialStartStr) return; // no trial started yet
+        const trialStart = new Date(trialStartStr);
+        const now = new Date();
+        const days = daysBetween(trialStart, now);
+        // After 10 days, if no payment, show payment modal
+        if (!payment && days >= 10) {
+          document.getElementById('payment-modal').style.display = 'block';
+        }
+      }
+
+      // Initialize Netlify Identity and gating logic
+      document.addEventListener('DOMContentLoaded', () => {
+        const signupOverlay = document.getElementById('signup-overlay');
+
+        if (window.netlifyIdentity) {
+          netlifyIdentity.on('init', user => {
+            if (!user) {
+              signupOverlay.style.display = 'flex';
+            } else {
+              // user logged in
+              signupOverlay.style.display = 'none';
+              // if trial not started, set start date
+              if (!localStorage.getItem('trialStart')) {
+                localStorage.setItem('trialStart', new Date().toISOString());
+              }
+              // Check TOS and trial status
+              if (checkTOS()) {
+                checkTrial();
+              }
+            }
+          });
+          netlifyIdentity.on('login', user => {
+            signupOverlay.style.display = 'none';
+            // start trial if not already started
+            if (!localStorage.getItem('trialStart')) {
+              localStorage.setItem('trialStart', new Date().toISOString());
+            }
+            if (checkTOS()) {
+              checkTrial();
+            }
+          });
+          netlifyIdentity.on('logout', () => {
+            signupOverlay.style.display = 'flex';
+          });
+          netlifyIdentity.init();
+        } else {
+          console.warn('Netlify Identity not available');
+        }
+      });
+    })();
+  </script>
+
 </body>
 </html>
