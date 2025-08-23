@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Log In - Lhyst</title>
+  <title>Log In – Lhyst</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Inter, sans-serif;
       margin: 0;
       padding: 0;
       display: flex;
@@ -17,75 +17,144 @@
       color: #333;
     }
     .container {
-      text-align: center;
       background: #fff;
       padding: 2rem;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
     }
-    .btn {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.6rem 1.2rem;
-      background-color: #2563eb;
-      color: #fff;
+    h2 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-size: .9rem;
+      margin-bottom: .25rem;
+    }
+    input[type="email"],
+    input[type="password"] {
+      padding: .6rem .75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    input[type="submit"] {
+      cursor: pointer;
       border: none;
       border-radius: 4px;
-      cursor: pointer;
+      padding: .75rem;
       font-size: 1rem;
+      font-weight: 600;
+      background: #2563eb;
+      color: #fff;
+      transition: background .2s ease;
     }
-    .btn:hover {
-      background-color: #1d4ed8;
+    input[type="submit"]:hover {
+      background: #1d4ed8;
     }
-    a {
+    .message {
+      margin-bottom: 1rem;
+      padding: .6rem .8rem;
+      border-radius: 4px;
+      font-size: .9rem;
+    }
+    .message.error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .message.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .signup-link {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: .9rem;
+    }
+    .signup-link a {
       color: #2563eb;
       text-decoration: none;
     }
-    a:hover {
+    .signup-link a:hover {
       text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Log in to Lhyst</h2>
-    <p>Enter your credentials to continue.</p>
-    <button class="btn" onclick="openLogin()">Log In with Email</button>
-    <p style="margin-top: 1rem;">
-      <a href="signup.html">Don’t have an account? Sign up</a>
-    </p>
+    <h2>Log In to Lhyst</h2>
+    <div id="message" class="message" style="display:none;"></div>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input type="email" id="email" required>
+      <label for="password">Password</label>
+      <input type="password" id="password" required>
+      <input type="submit" value="Log In">
+    </form>
+    <div class="signup-link">
+      Don’t have an account? <a href="/signup.html">Sign up</a>
+    </div>
   </div>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
-    function openLogin() {
-      if (window.netlifyIdentity) {
-        netlifyIdentity.open('login');
-        netlifyIdentity.on('login', function(user) {
-          /*
-           * When a user logs in via Netlify Identity, the `user` object will
-           * include a `confirmed_at` property once they have verified their
-           * email address via the confirmation link. If the user has not
-           * confirmed their email, they should not be allowed to proceed. In
-           * this case we alert them and immediately log them back out. This
-           * prevents unverified accounts from bypassing the confirmation step.
-           */
-          // Check if there is a pending redirect stored from registration.
-          const redirectPath = localStorage.getItem('pendingRedirect');
-          if (redirectPath) {
-            localStorage.removeItem('pendingRedirect');
-            window.location.href = redirectPath;
-          } else {
-            // Otherwise go to home page
-            window.location.href = '/';
-          }
-        });
-      } else {
-        alert('Netlify Identity is not available.');
+    // Display an error or success message
+    function showMessage(type, text) {
+      const msgEl = document.getElementById('message');
+      if (!type) {
+        msgEl.style.display = 'none';
+        msgEl.textContent = '';
+        msgEl.className = 'message';
+        return;
       }
+      msgEl.style.display = 'block';
+      msgEl.className = 'message ' + type;
+      msgEl.textContent = text;
     }
-    // Automatically trigger login modal when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      openLogin();
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      showMessage('', '');
+      try {
+        const res = await fetch('/.netlify/identity/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const err = (data.msg || data.error_description || data.error || '').toLowerCase();
+          if (err.includes('email not confirmed')) {
+            showMessage('error', 'Please confirm your email before logging in.');
+          } else {
+            showMessage('error', data.msg || data.error_description || data.error || 'Login failed.');
+          }
+          return;
+        }
+        // Start trial if not already started
+        if (!localStorage.getItem('trialStart')) {
+          localStorage.setItem('trialStart', new Date().toISOString());
+        }
+        // Redirect to pending location (e.g. checkout) if available
+        const redirectPath = localStorage.getItem('pendingRedirect');
+        if (redirectPath) {
+          localStorage.removeItem('pendingRedirect');
+          window.location.href = redirectPath;
+        } else {
+          window.location.href = '/';
+        }
+      } catch (err) {
+        console.error(err);
+        showMessage('error', 'An unexpected error occurred. Please try again later.');
+      }
     });
   </script>
 </body>

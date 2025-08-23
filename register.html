@@ -161,18 +161,19 @@
     <div class="plan-badge" id="planBadge"></div>
     <p class="description">Enter your details below to create a new Lhyst account. After signing up, we'll take you to checkout to set up billing for your free trial.</p>
     <div id="message"></div>
-    <form id="registerForm">
-      <label for="email">Email</label>
-      <input type="email" id="email" required>
-      <label for="password">Password</label>
-      <input type="password" id="password" minlength="6" required>
-      <label for="confirmPassword">Confirm Password</label>
-      <input type="password" id="confirmPassword" minlength="6" required>
-      <input type="submit" value="Create Account">
-    </form>
-    <div class="login-link">
-      Already have an account? <a href="/login.html">Log in here</a>.
-    </div>
+        <!-- Sign‑up form for creating a new account -->
+        <form id="registerForm">
+          <label for="email">Email</label>
+          <input type="email" id="email" required>
+          <label for="password">Password</label>
+          <input type="password" id="password" minlength="6" required>
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" minlength="6" required>
+          <input type="submit" value="Create Account">
+        </form>
+        <div class="login-link">
+          Already have an account? <a href="/login.html">Log in here</a>.
+        </div>
   </div>
   <div class="footer">&copy; 2025 Lhyst</div>
   <script>
@@ -201,7 +202,7 @@
       }
       showMessage('', '');
       try {
-        // Sign the user up via Netlify Identity API
+        // Attempt to sign the user up via Netlify Identity API
         const signupRes = await fetch('/.netlify/identity/signup', {
           method: 'POST',
           headers: {
@@ -211,28 +212,23 @@
         });
         const signupData = await signupRes.json();
         if (!signupRes.ok) {
-          // If the user already exists, show a friendly error
+          // Show a descriptive error if the email is already registered or another error occurred
           const errMsg = signupData.msg || signupData.error_description || signupData.error || 'Failed to sign up. Please try again.';
           showMessage('error', errMsg);
           return;
         }
-        // Success: notify user and instruct them to confirm their email.
-        // We do not automatically log in because Netlify Identity requires email
-        // confirmation before a user can authenticate. Instead we store a
-        // pending redirect so that after the user confirms their account and
-        // logs in, the login page can complete the flow and send them to
-        // checkout. The message guides them to check their inbox.
-        showMessage('success', 'Account created successfully! Please check your email to confirm your account. After confirming, return to the login page to continue.');
-        // Store the path to continue after confirmation and login
-        localStorage.setItem('pendingRedirect', '/checkout.html?plan=' + encodeURIComponent(selectedPlan));
-        // Optionally redirect to the login page after a short delay to encourage
-        // the user to sign in once they have confirmed.
+        // Persist the selected plan and start the free trial locally so the app remembers the subscription choice
+        localStorage.setItem('selectedPlan', selectedPlan);
+        localStorage.setItem('trialStart', new Date().toISOString());
+        // Inform the user to confirm their email. Do not log them in automatically.
+        showMessage('success', 'Account created! Please check your email and click the confirmation link. After confirming, return to the login page and sign in to continue.');
+        // Redirect to the login page after a short delay
         setTimeout(() => {
           window.location.href = '/login.html';
-        }, 4000);
+        }, 5000);
       } catch (err) {
-        showMessage('error', 'An unexpected error occurred. Please try again later.');
         console.error(err);
+        showMessage('error', 'An unexpected error occurred. Please try again later.');
       }
     });
   </script>

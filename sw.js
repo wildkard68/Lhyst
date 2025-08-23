@@ -2,7 +2,7 @@
 // Updated cache version to include signup.html, subscribe.html and register.html. Bump cache version to force refresh whenever files change (e.g. adding new pages like checkout.html or register.html).
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v32').then((cache) =>
+    caches.open('lhyst-cache-v33').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups
@@ -13,6 +13,8 @@ self.addEventListener('install', (e) => {
         './checkout.html',
         // cache the custom registration page used for creating accounts
         './register.html',
+        // cache the custom login page
+        './login.html',
         './manifest.webmanifest',
         './assets/icon-192.png',
         './assets/icon-512.png',
