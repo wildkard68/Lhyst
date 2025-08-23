@@ -1,4 +1,3 @@
-https://github.com/wildkard68/Lhyst/new/main?filename=netlify/functions/verify-code.js
 /*
  * Netlify Function: verify-code
  *
@@ -132,7 +131,12 @@ exports.handler = async (event) => {
       const created = await createRes.json();
       userId = created && created.id ? created.id : (created.user && created.user.id);
     }
-    // Upsert profile with plan and trial information
+    // Upsert profile with plan and trial information. The `profiles` table stores
+    // minimal subscription details. We omit fields that aren't defined in the
+    // table schema (such as plan_start_at and email_confirmed) to avoid
+    // PostgREST errors when the columns don't exist. The trial end date is
+    // calculated as 14 days from now. If a row already exists for this user,
+    // PostgREST will merge the new values due to the `Prefer` header.
     const trialEnd = new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString();
     await fetch(`${supabaseUrl}/rest/v1/profiles`, {
       method: 'POST',
@@ -146,9 +150,7 @@ exports.handler = async (event) => {
         {
           id: userId,
           plan: plan,
-          plan_start_at: new Date(now).toISOString(),
           trial_end_at: trialEnd,
-          email_confirmed: true,
         },
       ]),
     });
