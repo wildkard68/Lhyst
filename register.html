@@ -216,25 +216,20 @@
           showMessage('error', errMsg);
           return;
         }
-        // Automatically log the user in to set the auth cookie
-        const loginRes = await fetch('/.netlify/identity/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email, password })
-        });
-        const loginData = await loginRes.json();
-        if (!loginRes.ok) {
-          const errMsg = loginData.msg || loginData.error_description || loginData.error || 'Account created but failed to log in. Please log in via the login page.';
-          showMessage('error', errMsg);
-          return;
-        }
-        // Success: notify user and redirect to checkout
-        showMessage('success', 'Account created successfully! Redirecting to checkout…');
+        // Success: notify user and instruct them to confirm their email.
+        // We do not automatically log in because Netlify Identity requires email
+        // confirmation before a user can authenticate. Instead we store a
+        // pending redirect so that after the user confirms their account and
+        // logs in, the login page can complete the flow and send them to
+        // checkout. The message guides them to check their inbox.
+        showMessage('success', 'Account created successfully! Please check your email to confirm your account. After confirming, return to the login page to continue.');
+        // Store the path to continue after confirmation and login
+        localStorage.setItem('pendingRedirect', '/checkout.html?plan=' + encodeURIComponent(selectedPlan));
+        // Optionally redirect to the login page after a short delay to encourage
+        // the user to sign in once they have confirmed.
         setTimeout(() => {
-          window.location.href = '/checkout.html?plan=' + encodeURIComponent(selectedPlan);
-        }, 1500);
+          window.location.href = '/login.html';
+        }, 4000);
       } catch (err) {
         showMessage('error', 'An unexpected error occurred. Please try again later.');
         console.error(err);

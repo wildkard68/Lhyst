@@ -60,9 +60,29 @@
     function openLogin() {
       if (window.netlifyIdentity) {
         netlifyIdentity.open('login');
-        netlifyIdentity.on('login', function() {
-          // Redirect back to home when logged in
-          window.location.href = '/';
+        netlifyIdentity.on('login', function(user) {
+          /*
+           * When a user logs in via Netlify Identity, the `user` object will
+           * include a `confirmed_at` property once they have verified their
+           * email address via the confirmation link. If the user has not
+           * confirmed their email, they should not be allowed to proceed. In
+           * this case we alert them and immediately log them back out. This
+           * prevents unverified accounts from bypassing the confirmation step.
+           */
+          if (user && !user.confirmed_at) {
+            alert('Your email address has not been confirmed yet. Please check your inbox for the confirmation link and try again.');
+            netlifyIdentity.logout();
+            return;
+          }
+          // Check if there is a pending redirect stored from registration.
+          const redirectPath = localStorage.getItem('pendingRedirect');
+          if (redirectPath) {
+            localStorage.removeItem('pendingRedirect');
+            window.location.href = redirectPath;
+          } else {
+            // Otherwise go to home page
+            window.location.href = '/';
+          }
         });
       } else {
         alert('Netlify Identity is not available.');
