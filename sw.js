@@ -1,32 +1,55 @@
-self.addEventListener('install', (e)=>{
-  e.waitUntil(caches.open('lhyst-cache-v26').then(cache=>cache.addAll(['./index.html','./manifest.webmanifest','./assets/icon-192.png','./assets/icon-512.png'
-  ,
-    './assets/brand-logo.png','./assets/icon-192.png','./assets/icon-512.png','./assets/apple-touch-icon.png','./assets/favicon-32.png','./assets/favicon-16.png','./favicon.ico',
-    './assets/icon-192.upperleft.v1.png',
-    './assets/icon-512.upperleft.v1.png',
-    './assets/apple-touch-icon.upperleft.v1.png',
-    './assets/favicon-32.upperleft.v1.png',
-    './assets/favicon-16.upperleft.v1.png',
-    './favicon.upperleft.v1.ico',
-    './assets/brand-logo.upperleft.v2.png'])));
+// Service worker for Lhyst
+// Updated cache version to include subscribe.html so that the new subscription page is served offline.
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open('lhyst-cache-v27').then((cache) =>
+      cache.addAll([
+        './index.html',
+        './subscribe.html',
+        './manifest.webmanifest',
+        './assets/icon-192.png',
+        './assets/icon-512.png',
+        './assets/brand-logo.png',
+        './assets/icon-192.png',
+        './assets/icon-512.png',
+        './assets/apple-touch-icon.png',
+        './assets/favicon-32.png',
+        './assets/favicon-16.png',
+        './favicon.ico',
+        './assets/icon-192.upperleft.v1.png',
+        './assets/icon-512.upperleft.v1.png',
+        './assets/apple-touch-icon.upperleft.v1.png',
+        './assets/favicon-32.upperleft.v1.png',
+        './assets/favicon-16.upperleft.v1.png',
+        './favicon.upperleft.v1.ico',
+        './assets/brand-logo.upperleft.v2.png',
+      ])
+    )
+  );
 });
-self.addEventListener('fetch', (e)=>{
-  e.respondWith(caches.match(e.request).then(resp=>resp || fetch(e.request)));
+
+// Serve files from cache first, falling back to network
+self.addEventListener('fetch', (e) => {
+  e.respondWith(caches.match(e.request).then((resp) => resp || fetch(e.request)));
 });
-self.addEventListener('notificationclick', (event)=>{
+
+// Handle notification clicks (used by equipment cleaning alerts)
+self.addEventListener('notificationclick', (event) => {
   const equipId = event.notification?.data?.equipId;
   event.notification.close();
-  event.waitUntil(clients.matchAll({type:'window', includeUncontrolled:true}).then(clis=>{
-    for(const c of clis){
-      if('focus' in c){
-        c.focus();
-        if(equipId) c.postMessage({type:'gotoCleaning', equipId});
-        return;
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clis) => {
+      for (const c of clis) {
+        if ('focus' in c) {
+          c.focus();
+          if (equipId) c.postMessage({ type: 'gotoCleaning', equipId });
+          return;
+        }
       }
-    }
-    if(clients.openWindow){
-      const url = equipId ? ('./index.html#log-cleaning?equipId='+equipId) : './index.html#view-cleaning';
-      return clients.openWindow(url);
-    }
-  }));
+      if (clients.openWindow) {
+        const url = equipId ? './index.html#log-cleaning?equipId=' + equipId : './index.html#view-cleaning';
+        return clients.openWindow(url);
+      }
+    })
+  );
 });
