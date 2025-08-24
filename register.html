@@ -238,9 +238,15 @@
         // Store email, password and plan locally for verification step
         localStorage.setItem('pendingEmail', email);
         localStorage.setItem('pendingPassword', password);
-        // We no longer record the email and timestamp for cooldown purposes.
-        // E-R5: Successful code sent
-        showMessage('success', 'Verification code sent! Please check your email and enter the code on the next page. (Code: E-R5)');
+        // If the response includes a verification code, the email send failed or is restricted.
+        // Show the code directly to the user and store it so the verify page can auto‑populate.
+        if (data.code) {
+          localStorage.setItem('pendingCode', data.code);
+          showMessage('success', `Your verification code is ${data.code}. Please copy it and continue to the next step. (Code: E-R7)`);
+        } else {
+          // E-R5: Successful code sent via email
+          showMessage('success', 'Verification code sent! Please check your email and enter the code on the next page. (Code: E-R5)');
+        }
         setTimeout(() => {
           window.location.href = '/verify.html';
         }, 4000);

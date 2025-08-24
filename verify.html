@@ -158,6 +158,15 @@
       el.className = 'message ' + type;
       el.textContent = text;
     }
+    // Pre‑populate the code input if a pending code was stored during sign‑up.
+    const pendingCode = localStorage.getItem('pendingCode');
+    if (pendingCode) {
+      const codeInput = document.getElementById('code');
+      if (codeInput) {
+        codeInput.value = pendingCode;
+      }
+    }
+
     document.getElementById('verifyForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const code = document.getElementById('code').value.trim();
@@ -204,6 +213,7 @@
             // Clean up stored credentials
         localStorage.removeItem('pendingPassword');
         localStorage.removeItem('pendingEmail');
+        localStorage.removeItem('pendingCode');
         // Redirect to checkout to finalize subscription
         window.location.href = `/checkout.html?plan=${encodeURIComponent(plan)}`;
       } catch (err) {

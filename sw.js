@@ -1,8 +1,8 @@
 // Service worker for Lhyst
-// Updated cache version to v40 to include new placeholder view, dynamic branding updates, and removal of cooldown logic.
+// Updated cache version to v41 to include fallback verification codes and replace logo with abstract version.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v40').then((cache) =>
+    caches.open('lhyst-cache-v41').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups

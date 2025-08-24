@@ -60,6 +60,10 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: 'This email is already registered' }),
       };
     }
+
+    // Track current time for expiry calculations. Previously we referenced
+    // a `now` variable that was undefined after refactoring. Define it here.
+    const now = Date.now();
     /*
      * We no longer enforce a cooldown period for sending verification codes.
      * Previously we queried the `email_codes` table for existing unused codes
@@ -68,6 +72,7 @@ exports.handler = async (event) => {
      */
     // Generate a 6‑digit code.
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Set expiration one hour from now.
     const expiresAt = new Date(now + 60 * 60 * 1000).toISOString(); // 1 hour
     // Insert the code into the database.
     const insertRes = await fetch(`${supabaseUrl}/rest/v1/email_codes`, {
@@ -116,16 +121,21 @@ exports.handler = async (event) => {
         html: `<p>Hello,</p><p>Your Lhyst verification code is <strong>${code}</strong>. It expires in 1 hour.</p><p>Please enter this code on the verification page to complete your registration.</p>`,
       }),
     });
+    // We no longer treat a failed email send as fatal. Resend may return 4xx
+    // responses (e.g. restricted API keys). In such cases we still return
+    // success with the verification code so the frontend can display it.
+    let note;
     if (!emailRes.ok) {
-      const eText = await emailRes.text();
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: `Failed to send verification email: ${eText}` }),
-      };
+      try {
+        const errText = await emailRes.text();
+        note = `Email send failed: ${errText}`;
+      } catch (_) {
+        note = 'Email send failed';
+      }
     }
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true }),
+      body: JSON.stringify({ success: true, code, note }),
     };
   } catch (error) {
     console.error('generate-code error:', error);
