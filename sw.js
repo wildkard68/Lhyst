@@ -1,8 +1,9 @@
 // Service worker for Lhyst
-// Updated cache version to v41 to include fallback verification codes and replace logo with abstract version.
+// Updated cache version to v42 to reflect removal of the sign‑up overlay, updated abstract logo symbol only,
+// and to ensure all pages cache the latest assets.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('lhyst-cache-v41').then((cache) =>
+    caches.open('lhyst-cache-v42').then((cache) =>
       cache.addAll([
         './index.html',
         // cache signup page for offline free trial signups
