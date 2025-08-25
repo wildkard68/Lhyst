@@ -121,37 +121,123 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: `Failed to save verification code: ${text}` }),
       };
     }
-    // Send the code via Resend
+    // Send the code via one of the configured email providers. We attempt
+    // Resend first, then fall back to SendGrid or Mailgun if available.
     const resendKey = process.env.RESEND_API_KEY;
+    const sendgridKey = process.env.SENDGRID_API_KEY;
+    const mailgunKey = process.env.MAILGUN_API_KEY;
+    const mailgunDomain = process.env.MAILGUN_DOMAIN;
     const fromEmail = process.env.FROM_EMAIL;
-    if (!resendKey || !fromEmail) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: 'Email configuration is missing' }),
-      };
-    }
-    const emailRes = await fetch('https://api.resend.com/v1/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: email,
-        from: fromEmail,
-        subject: 'Your Lhyst verification code',
-        html: `<p>Hello,</p><p>Your Lhyst verification code is <strong>${code}</strong>. It expires in 1 hour.</p><p>Please enter this code on the verification page to complete your registration.</p>`,
-      }),
-    });
     let note;
-    if (!emailRes.ok) {
-      try {
-        const errText = await emailRes.text();
-        note = `Failed to send verification email: ${errText}`;
-      } catch (_) {
-        note = 'Failed to send verification email';
+    let emailSent = false;
+
+    // Helper to send email via Resend
+    async function sendViaResend() {
+      const res = await fetch('https://api.resend.com/v1/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          from: fromEmail,
+          subject: 'Your Lhyst verification code',
+          html: `<p>Hello,</p><p>Your Lhyst verification code is <strong>${code}</strong>. It expires in 1 hour.</p><p>Please enter this code on the verification page to complete your registration.</p>`,
+        }),
+      });
+      if (!res.ok) {
+        try {
+          const errText = await res.text();
+          note = note ? `${note} | Resend error: ${errText}` : `Resend error: ${errText}`;
+        } catch (_) {
+          note = note ? `${note} | Resend failed` : 'Resend failed';
+        }
+      } else {
+        emailSent = true;
       }
     }
+
+    // Helper to send email via SendGrid
+    async function sendViaSendGrid() {
+      const sgBody = {
+        personalizations: [
+          { to: [{ email }], subject: 'Your Lhyst verification code' },
+        ],
+        from: { email: fromEmail, name: 'Lhyst' },
+        content: [
+          {
+            type: 'text/plain',
+            value: `Hello,\n\nYour Lhyst verification code is ${code}. It expires in 1 hour.\nPlease enter this code on the verification page to complete your registration.`,
+          },
+        ],
+      };
+      const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sgBody),
+      });
+      if (res.status >= 200 && res.status < 300) {
+        emailSent = true;
+      } else {
+        try {
+          const t = await res.text();
+          note = note ? `${note} | SendGrid error: ${t}` : `SendGrid error: ${t}`;
+        } catch (_) {
+          note = note ? `${note} | SendGrid failed` : 'SendGrid failed';
+        }
+      }
+    }
+
+    // Helper to send email via Mailgun
+    async function sendViaMailgun() {
+      const params = new URLSearchParams();
+      params.append('from', fromEmail);
+      params.append('to', email);
+      params.append('subject', 'Your Lhyst verification code');
+      params.append('text', `Hello,\n\nYour Lhyst verification code is ${code}. It expires in 1 hour.\nPlease enter this code on the verification page to complete your registration.`);
+      const auth = Buffer.from(`api:${mailgunKey}`).toString('base64');
+      const res = await fetch(`https://api.mailgun.net/v3/${mailgunDomain}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+      if (res.ok) {
+        emailSent = true;
+      } else {
+        try {
+          const t = await res.text();
+          note = note ? `${note} | Mailgun error: ${t}` : `Mailgun error: ${t}`;
+        } catch (_) {
+          note = note ? `${note} | Mailgun failed` : 'Mailgun failed';
+        }
+      }
+    }
+
+    if (fromEmail) {
+      // Attempt providers in order: Resend, SendGrid, Mailgun
+      if (resendKey) {
+        await sendViaResend();
+      }
+      if (!emailSent && sendgridKey) {
+        await sendViaSendGrid();
+      }
+      if (!emailSent && mailgunKey && mailgunDomain) {
+        await sendViaMailgun();
+      }
+      if (!emailSent && !note) {
+        note = 'No email provider configured or all providers failed';
+      }
+    } else {
+      note = 'FROM_EMAIL is not configured';
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify({ success: true, code, note }),
