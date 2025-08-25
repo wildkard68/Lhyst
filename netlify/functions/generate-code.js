@@ -58,7 +58,14 @@ exports.handler = async (event) => {
         body: JSON.stringify({ error: 'This email is already registered' }),
       };
     }
-    // Check for existing codes that have not expired or been used.
+    // Check for existing codes that have not been used.  If any exist, mark
+    // them as used so a new code can be generated.  Previously the function
+    // would return an error (E‑R3) when a code was still active, which
+    // prevented users from requesting another code if the original email was
+    // never delivered.  Instead of blocking, we proactively mark any
+    // outstanding codes as used and proceed to issue a new one.  This
+    // ensures users are not stuck waiting for an expiration window to
+    // complete.  Any expired codes will naturally be ignored.
     const codesRes = await fetch(
       `${supabaseUrl}/rest/v1/email_codes?email=eq.${encodeURIComponent(
         email
@@ -81,15 +88,32 @@ exports.handler = async (event) => {
     const now = Date.now();
     if (Array.isArray(existingCodes)) {
       for (const row of existingCodes) {
-        const expiresAt = new Date(row.expires_at).getTime();
-        if (!row.used && expiresAt > now) {
-          return {
-            statusCode: 400,
-            body: JSON.stringify({
-              error:
-                'A verification code has already been sent. Please check your email or wait until it expires.',
-            }),
-          };
+        try {
+          const expiresAt = new Date(row.expires_at).getTime();
+          // Mark any unused code as used.  Codes are considered stale if
+          // they've already expired, but we mark them regardless so the
+          // constraint is cleared.
+          if (!row.used) {
+            await fetch(
+              `${supabaseUrl}/rest/v1/email_codes?email=eq.${encodeURIComponent(
+                email
+              )}&code=eq.${encodeURIComponent(row.code)}`,
+              {
+                method: 'PATCH',
+                headers: {
+                  apikey: serviceKey,
+                  Authorization: `Bearer ${serviceKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ used: true }),
+              }
+            );
+          }
+        } catch (patchErr) {
+          // Don't treat patch failures as fatal; we still attempt to generate a
+          // new code.  If patching fails, a subsequent signup attempt may
+          // encounter the previous code again, but this avoids user lockout.
+          console.error('Failed to mark existing code as used:', patchErr);
         }
       }
     }
