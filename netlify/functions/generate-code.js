@@ -85,7 +85,10 @@ exports.handler = async (event) => {
         if (!row.used && expiresAt > now) {
           return {
             statusCode: 400,
-            body: JSON.stringify({ error: 'A verification code has already been sent. Please check your email or wait until it expires.' }),
+            body: JSON.stringify({
+              error:
+                'A verification code has already been sent. Please check your email or wait until it expires.',
+            }),
           };
         }
       }
@@ -140,16 +143,18 @@ exports.handler = async (event) => {
         html: `<p>Hello,</p><p>Your Lhyst verification code is <strong>${code}</strong>. It expires in 1 hour.</p><p>Please enter this code on the verification page to complete your registration.</p>`,
       }),
     });
+    let note;
     if (!emailRes.ok) {
-      const eText = await emailRes.text();
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: `Failed to send verification email: ${eText}` }),
-      };
+      try {
+        const errText = await emailRes.text();
+        note = `Failed to send verification email: ${errText}`;
+      } catch (_) {
+        note = 'Failed to send verification email';
+      }
     }
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true }),
+      body: JSON.stringify({ success: true, code, note }),
     };
   } catch (error) {
     console.error('generate-code error:', error);
