@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sign Up – Lhyst</title>
+  <!-- Preload the brand logo to avoid a flicker on initial load -->
+  <link rel="preload" href="brand-logo.png" as="image">
   <!-- Use the same color variables as the main app -->
   <style>
     :root{
@@ -174,7 +176,8 @@
     function startPlan(plan) {
       // Save the selected plan so that registration and checkout pages can
       // preselect the appropriate plan when calculating prices.
-      localStorage.setItem('selectedPlan', plan);
+      // Persist the plan only for this browser session
+      sessionStorage.setItem('selectedPlan', plan);
       // Redirect to our custom registration form with the plan encoded in the
       // query string. The registration page will handle sign‑ups and login.
       window.location.href = '/register.html?plan=' + encodeURIComponent(plan);

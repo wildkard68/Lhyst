@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Checkout – Lhyst</title>
+  <!-- Preload the brand logo to avoid a flicker on initial load -->
+  <link rel="preload" href="brand-logo.png" as="image">
   <!-- Use the same color variables as the rest of the app for consistency -->
   <style>
     :root{
@@ -158,9 +160,10 @@
       // determine the selected plan from query or localStorage
       const params = new URLSearchParams(window.location.search);
       const planParam = params.get('plan');
-      const storedPlan = localStorage.getItem('selectedPlan');
+      const storedPlan = sessionStorage.getItem('selectedPlan');
       const plan = planParam || storedPlan || 'basic';
-      localStorage.setItem('selectedPlan', plan);
+      // Persist the plan only for this browser session
+      sessionStorage.setItem('selectedPlan', plan);
       const planNameEl = document.getElementById('planName');
       const priceEl = document.getElementById('planPrice');
       const billingPeriodEl = document.getElementById('billingPeriod');
@@ -206,7 +209,8 @@
       });
       // handle skip payment
       document.getElementById('skipBtn').addEventListener('click', function() {
-        localStorage.setItem('paymentDeferred', 'true');
+        // Indicate that payment has been deferred during this session
+        sessionStorage.setItem('paymentDeferred', 'true');
         alert('You have deferred payment. Enjoy your trial! We will remind you to add payment details before your trial ends.');
         window.location.href = '/';
       });
