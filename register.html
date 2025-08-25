@@ -241,11 +241,12 @@
         sessionStorage.setItem('pendingEmail', email);
         sessionStorage.setItem('pendingPassword', password);
         // If the response includes a verification code, the email send failed or is restricted.
-        // Show the code directly to the user and store it so the verify page can auto‑populate.
+        // Still store the code in sessionStorage so the verify page can auto‑populate, but do not expose the code to the user.
         if (data.code) {
-          // If the verification code is provided in the response, store it in sessionStorage.
+          // Store the verification code locally in sessionStorage for the verify page
           sessionStorage.setItem('pendingCode', data.code);
-          showMessage('success', `Your verification code is ${data.code}. Please copy it and continue to the next step. (Code: E-R7)`);
+          // Notify the user that a verification code has been generated without revealing the code itself
+          showMessage('success', 'Verification code generated. Please check your email and enter the code on the next page. (Code: E-R7)');
         } else {
           // E-R5: Successful code sent via email
           showMessage('success', 'Verification code sent! Please check your email and enter the code on the next page. (Code: E-R5)');
